@@ -1,22 +1,38 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Check, Calendar, MapPin, Bus, Users, Download, Home } from 'lucide-react';
+import { Check, Calendar, MapPin, Bus, Users, Download, Home, Bell } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { useToast } from "@/hooks/use-toast";
+import { NotificationService, NotificationType } from '@/services/NotificationService';
+import NotificationPreferences from '@/components/booking/NotificationPreferences';
 
 const BookingConfirmation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const bookingData = location.state;
   
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [smsNotifications, setSmsNotifications] = useState(false);
+  const [notificationsSent, setNotificationsSent] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   // If no booking data is available, redirect to the home page
-  React.useEffect(() => {
+  useEffect(() => {
     if (!bookingData) {
       navigate('/');
     }
   }, [bookingData, navigate]);
+  
+  // Send notifications when preferences change
+  useEffect(() => {
+    if (bookingData && !notificationsSent && (emailNotifications || smsNotifications)) {
+      sendNotifications();
+    }
+  }, [emailNotifications, smsNotifications]);
   
   if (!bookingData) {
     return null; // Will redirect in the useEffect
@@ -26,6 +42,92 @@ const BookingConfirmation = () => {
   const bookingDate = new Date();
   const travelDate = new Date(date);
   const bookingId = `NB${Math.floor(100000 + Math.random() * 900000)}`;
+  
+  // Function to send notifications based on user preferences
+  const sendNotifications = async () => {
+    if (notificationsSent || (!emailNotifications && !smsNotifications)) return;
+    
+    setIsProcessing(true);
+    
+    // Gather the primary passenger's contact details
+    // In a real app, this would come from the form or user profile
+    const primaryPassenger = passengerDetails[0];
+    const recipient = {
+      name: primaryPassenger.name,
+      email: emailNotifications ? `${primaryPassenger.name.toLowerCase().replace(/\s/g, '.')}@example.com` : undefined,
+      phone: smsNotifications ? '+9779812345678' : undefined
+    };
+    
+    // Prepare notification data
+    const notificationData = {
+      bookingId,
+      passengerDetails,
+      journeyDetails: {
+        from,
+        to,
+        date,
+        busName: bus.busName,
+        departureTime: bus.departureTime,
+        arrivalTime: bus.arrivalTime
+      },
+      totalAmount
+    };
+    
+    try {
+      // Send email notification if enabled
+      if (emailNotifications) {
+        const emailSent = await NotificationService.sendBookingConfirmation(
+          recipient,
+          notificationData,
+          'email'
+        );
+        
+        if (emailSent) {
+          toast({
+            title: "Email Sent",
+            description: `Booking confirmation sent to ${recipient.email}`,
+            duration: 3000,
+          });
+        }
+      }
+      
+      // Send SMS notification if enabled
+      if (smsNotifications) {
+        const smsSent = await NotificationService.sendBookingConfirmation(
+          recipient,
+          notificationData,
+          'sms'
+        );
+        
+        if (smsSent) {
+          toast({
+            title: "SMS Sent",
+            description: `Booking confirmation sent to ${recipient.phone}`,
+            duration: 3000,
+          });
+          
+          // Schedule travel reminder for 24 hours before departure
+          const reminderDate = new Date(travelDate);
+          reminderDate.setDate(reminderDate.getDate() - 1);
+          
+          // In a real app, this would be handled by a background job/cron
+          console.log(`Travel reminder scheduled for ${format(reminderDate, 'MMM d, yyyy HH:mm')}`);
+        }
+      }
+      
+      setNotificationsSent(true);
+    } catch (error) {
+      console.error('Error sending notifications:', error);
+      toast({
+        title: "Notification Error",
+        description: "Failed to send some notifications. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -144,6 +246,33 @@ const BookingConfirmation = () => {
                     <div className="font-medium">NPR {totalAmount.toLocaleString()}</div>
                   </div>
                 </div>
+              </div>
+              
+              {/* Notification Preferences */}
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <div className="flex items-center mb-4">
+                  <Bell size={18} className="text-primary mr-2" />
+                  <h3 className="font-medium">Stay Updated</h3>
+                </div>
+                
+                <NotificationPreferences 
+                  emailEnabled={emailNotifications}
+                  smsEnabled={smsNotifications}
+                  onEmailChange={(checked) => setEmailNotifications(checked)}
+                  onSmsChange={(checked) => setSmsNotifications(checked)}
+                />
+                
+                {isProcessing && (
+                  <div className="mt-3 text-sm text-gray-600">
+                    Processing notifications...
+                  </div>
+                )}
+                
+                {notificationsSent && (
+                  <div className="mt-3 text-sm text-green-600">
+                    Notifications sent successfully! You'll receive updates about your journey.
+                  </div>
+                )}
               </div>
             </div>
           </div>
