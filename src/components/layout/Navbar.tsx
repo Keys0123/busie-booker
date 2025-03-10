@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MenuIcon, X, User, Phone } from 'lucide-react';
+import { MenuIcon, X, User, Phone, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -57,6 +58,13 @@ const Navbar = () => {
               </Link>
               
               <Link 
+                to="/admin/login" 
+                className="flex items-center gap-2 text-sm font-medium text-primary"
+              >
+                <Shield size={16} /> Admin
+              </Link>
+              
+              <Link 
                 to="/search" 
                 className="btn-primary"
               >
@@ -92,6 +100,13 @@ const Navbar = () => {
               className="btn-secondary w-full text-center"
             >
               Sign In
+            </Link>
+            
+            <Link 
+              to="/admin/login" 
+              className="flex items-center justify-center gap-2 py-2 text-primary border border-primary rounded-md"
+            >
+              <Shield size={16} /> Admin Login
             </Link>
             
             <Link 
