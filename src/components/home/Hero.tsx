@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -6,14 +5,24 @@ import SearchForm from './SearchForm';
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen pt-20 pb-16 flex items-center">
-      {/* Background shapes */}
-      <div className="absolute inset-0 overflow-hidden -z-10">
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-blue-50 to-transparent opacity-60"></div>
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-radial from-blue-50 to-transparent opacity-70"></div>
+    <section className="relative min-h-screen pt-20 pb-16 flex items-center overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-blue-50 to-transparent opacity-60 animate-pulse-soft"></div>
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-radial from-blue-50 to-transparent opacity-70 animate-pulse-soft" style={{ animationDelay: '1s' }}></div>
+        
+        {/* Animated circles */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-gradient-radial from-primary/5 to-transparent animate-pulse-soft"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-gradient-radial from-primary/10 to-transparent animate-pulse-soft" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Floating elements */}
+        <div className="absolute top-20 right-1/3 w-16 h-16 bg-blue-100/20 rounded-full animate-float opacity-70"></div>
+        <div className="absolute bottom-40 left-1/4 w-20 h-20 bg-blue-100/30 rounded-full animate-float opacity-50" style={{ animationDelay: '1.5s' }}></div>
+        <div className="absolute top-1/2 right-1/5 w-12 h-12 bg-primary/10 rounded-full animate-float opacity-60" style={{ animationDelay: '3s' }}></div>
       </div>
       
       <div className="container mx-auto px-4">
+        {/* Keep existing grid content */}
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Left Column - Content */}
           <div className="animate-fade-in-up">
