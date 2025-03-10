@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -19,6 +20,60 @@ const Hero = () => {
         <div className="absolute top-20 right-1/3 w-16 h-16 bg-blue-100/20 rounded-full animate-float opacity-70"></div>
         <div className="absolute bottom-40 left-1/4 w-20 h-20 bg-blue-100/30 rounded-full animate-float opacity-50" style={{ animationDelay: '1.5s' }}></div>
         <div className="absolute top-1/2 right-1/5 w-12 h-12 bg-primary/10 rounded-full animate-float opacity-60" style={{ animationDelay: '3s' }}></div>
+        
+        {/* Moving Bus Animations */}
+        <div className="absolute bottom-12 w-full overflow-hidden">
+          {/* Bus 1 - Left to Right */}
+          <div className="absolute -left-24 bottom-0 animate-bus-left-to-right">
+            <div className="relative w-20 h-8">
+              {/* Bus Body */}
+              <div className="absolute inset-0 bg-primary rounded-md"></div>
+              {/* Windows */}
+              <div className="absolute top-1.5 left-2 right-2 h-2.5 bg-blue-100/80 rounded-sm flex space-x-0.5">
+                <div className="h-full w-1.5 bg-primary/20"></div>
+                <div className="h-full w-1.5 bg-primary/20"></div>
+                <div className="h-full w-1.5 bg-primary/20"></div>
+              </div>
+              {/* Wheels */}
+              <div className="absolute -bottom-1 left-3 w-2.5 h-2.5 bg-gray-800 rounded-full"></div>
+              <div className="absolute -bottom-1 right-3 w-2.5 h-2.5 bg-gray-800 rounded-full"></div>
+            </div>
+          </div>
+          
+          {/* Bus 2 - Right to Left */}
+          <div className="absolute -right-24 bottom-8 animate-bus-right-to-left">
+            <div className="relative w-24 h-10">
+              {/* Bus Body */}
+              <div className="absolute inset-0 bg-[#8B5CF6] rounded-md"></div>
+              {/* Windows */}
+              <div className="absolute top-2 left-2 right-2 h-3 bg-blue-100/80 rounded-sm flex space-x-1">
+                <div className="h-full w-2 bg-[#8B5CF6]/20"></div>
+                <div className="h-full w-2 bg-[#8B5CF6]/20"></div>
+                <div className="h-full w-2 bg-[#8B5CF6]/20"></div>
+                <div className="h-full w-2 bg-[#8B5CF6]/20"></div>
+              </div>
+              {/* Wheels */}
+              <div className="absolute -bottom-1 left-4 w-3 h-3 bg-gray-800 rounded-full"></div>
+              <div className="absolute -bottom-1 right-4 w-3 h-3 bg-gray-800 rounded-full"></div>
+            </div>
+          </div>
+          
+          {/* Bus 3 - Left to Right (Delayed) */}
+          <div className="absolute -left-20 bottom-20 animate-bus-left-to-right" style={{ animationDelay: '5s' }}>
+            <div className="relative w-16 h-7">
+              {/* Bus Body */}
+              <div className="absolute inset-0 bg-[#0EA5E9] rounded-md"></div>
+              {/* Windows */}
+              <div className="absolute top-1 left-1.5 right-1.5 h-2.5 bg-blue-100/80 rounded-sm flex space-x-0.5">
+                <div className="h-full w-1.5 bg-[#0EA5E9]/20"></div>
+                <div className="h-full w-1.5 bg-[#0EA5E9]/20"></div>
+              </div>
+              {/* Wheels */}
+              <div className="absolute -bottom-1 left-2.5 w-2 h-2 bg-gray-800 rounded-full"></div>
+              <div className="absolute -bottom-1 right-2.5 w-2 h-2 bg-gray-800 rounded-full"></div>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div className="container mx-auto px-4">

@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -101,6 +102,16 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-20px)" }
         },
+        
+        // New bus animations
+        "bus-left-to-right": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(calc(100vw + 96px))" }
+        },
+        "bus-right-to-left": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(calc(-100vw - 96px))" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -114,6 +125,8 @@ export default {
         
         // New animations
         "float": "float 8s ease-in-out infinite",
+        "bus-left-to-right": "bus-left-to-right 20s linear infinite",
+        "bus-right-to-left": "bus-right-to-left 25s linear infinite",
       },
       fontFamily: {
         sans: [
