@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -97,20 +96,20 @@ export default {
           "100%": { transform: "translateX(0)" }
         },
         
-        // New animation: float effect
+        // Float animation
         "float": {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-20px)" }
         },
         
-        // New bus animations
+        // Improved bus animations with smoother transitions
         "bus-left-to-right": {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(calc(100vw + 96px))" }
+          "0%": { transform: "translateX(-100px)" },
+          "100%": { transform: "translateX(calc(100vw + 100px))" }
         },
         "bus-right-to-left": {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(calc(-100vw - 96px))" }
+          "0%": { transform: "translateX(calc(100vw + 100px))" },
+          "100%": { transform: "translateX(-100px)" }
         },
       },
       animation: {
@@ -123,10 +122,10 @@ export default {
         "slide-in-right": "slide-in-right 0.5s ease-out",
         "slide-in-left": "slide-in-left 0.5s ease-out",
         
-        // New animations
+        // Updated animations with faster speeds
         "float": "float 8s ease-in-out infinite",
-        "bus-left-to-right": "bus-left-to-right 20s linear infinite",
-        "bus-right-to-left": "bus-right-to-left 25s linear infinite",
+        "bus-left-to-right": "bus-left-to-right 15s linear infinite",
+        "bus-right-to-left": "bus-right-to-left 18s linear infinite",
       },
       fontFamily: {
         sans: [
