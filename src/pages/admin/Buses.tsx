@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Search, Edit, Trash, Filter, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
+import BusFormModal from '@/components/admin/BusFormModal';
 
 // Sample bus data
 const initialBuses = [
@@ -61,10 +61,33 @@ const initialBuses = [
   },
 ];
 
+// Sample route data for dropdown
+const sampleRoutes = [
+  { name: 'Kathmandu - Pokhara' },
+  { name: 'Kathmandu - Chitwan' },
+  { name: 'Pokhara - Lumbini' },
+  { name: 'Kathmandu - Janakpur' },
+  { name: 'Bhaktapur - Patan' },
+];
+
+type BusData = {
+  id: number;
+  number: string;
+  type: string;
+  capacity: number;
+  route: string;
+  driver: string;
+  status: string;
+  lastMaintenance: string;
+};
+
 const AdminBuses = () => {
   const [buses, setBuses] = useState(initialBuses);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [isAddBusModalOpen, setIsAddBusModalOpen] = useState(false);
+  const [isEditBusModalOpen, setIsEditBusModalOpen] = useState(false);
+  const [selectedBus, setSelectedBus] = useState<BusData | null>(null);
   
   // Filter buses based on search term and status
   const filteredBuses = buses.filter(bus => {
@@ -80,10 +103,17 @@ const AdminBuses = () => {
   });
   
   const handleEditBus = (busId: number) => {
-    toast({
-      title: "Edit Bus",
-      description: `Editing bus ID: ${busId}`,
-    });
+    const busToEdit = buses.find(bus => bus.id === busId);
+    if (busToEdit) {
+      setSelectedBus(busToEdit);
+      setIsEditBusModalOpen(true);
+    } else {
+      toast({
+        title: "Error",
+        description: `Bus with ID: ${busId} not found`,
+        variant: "destructive",
+      });
+    }
   };
   
   const handleDeleteBus = (busId: number) => {
@@ -131,6 +161,37 @@ const AdminBuses = () => {
     }
   };
 
+  const handleSaveBus = (busData: BusData) => {
+    // For edit mode
+    if (selectedBus) {
+      setBuses(prevBuses => 
+        prevBuses.map(bus => 
+          bus.id === busData.id ? busData : bus
+        )
+      );
+      
+      toast({
+        title: "Bus Updated",
+        description: `Successfully updated bus: ${busData.number}`,
+      });
+    } 
+    // For add mode
+    else {
+      // Create a new bus with the next ID
+      const newBus = {
+        ...busData,
+        id: Math.max(...buses.map(b => b.id), 0) + 1,
+      };
+      
+      setBuses(prev => [...prev, newBus]);
+      
+      toast({
+        title: "Bus Created",
+        description: `Successfully added new bus: ${newBus.number}`,
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -140,7 +201,7 @@ const AdminBuses = () => {
             Manage your bus fleet and vehicles
           </p>
         </div>
-        <Button onClick={() => toast({ title: "Add Bus", description: "Bus form would appear here" })}>
+        <Button onClick={() => setIsAddBusModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Bus
         </Button>
       </div>
@@ -273,6 +334,25 @@ const AdminBuses = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Bus Form Modals */}
+      <BusFormModal 
+        isOpen={isAddBusModalOpen}
+        onClose={() => setIsAddBusModalOpen(false)}
+        onSave={handleSaveBus}
+        routes={sampleRoutes}
+      />
+      
+      <BusFormModal 
+        isOpen={isEditBusModalOpen}
+        onClose={() => {
+          setIsEditBusModalOpen(false);
+          setSelectedBus(null);
+        }}
+        onSave={handleSaveBus}
+        initialData={selectedBus}
+        routes={sampleRoutes}
+      />
     </div>
   );
 };
