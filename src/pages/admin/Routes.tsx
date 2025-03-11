@@ -270,29 +270,30 @@ const AdminRoutes = () => {
         </CardContent>
       </Card>
       
-      {/* Note: In a real app, you would implement the add/edit modals as separate components */}
-      {/* For this demonstration, we're just showing toast notifications */}
+      {/* Handle modals using state instead of direct rendering */}
       {isAddRouteModalOpen && (
-        <div className="hidden">
-          {/* Close the modal and show toast */}
-          {toast({
-            title: "Add Route",
-            description: "Route form would appear here in a real implementation",
-          })}
-          {setIsAddRouteModalOpen(false)}
-        </div>
+        <>
+          {setTimeout(() => {
+            toast({
+              title: "Add Route",
+              description: "Route form would appear here in a real implementation",
+            });
+            setIsAddRouteModalOpen(false);
+          }, 0)}
+        </>
       )}
       
       {isEditRouteModalOpen && (
-        <div className="hidden">
-          {/* Close the modal and show toast */}
-          {toast({
-            title: "Edit Route",
-            description: `Editing route ID: ${selectedRoute}`,
-          })}
-          {setIsEditRouteModalOpen(false)}
-          {setSelectedRoute(null)}
-        </div>
+        <>
+          {setTimeout(() => {
+            toast({
+              title: "Edit Route",
+              description: `Editing route ID: ${selectedRoute}`,
+            });
+            setIsEditRouteModalOpen(false);
+            setSelectedRoute(null);
+          }, 0)}
+        </>
       )}
     </div>
   );
