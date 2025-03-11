@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
+import RouteFormModal from '@/components/admin/RouteFormModal';
 
 // Sample route data
 const initialRoutes = [
@@ -67,13 +68,25 @@ const initialRoutes = [
   },
 ];
 
+type RouteData = {
+  id: number;
+  name: string;
+  startPoint: string;
+  endPoint: string;
+  distance: string;
+  duration: string;
+  fareRange: string;
+  buses: number;
+  status: string;
+};
+
 const AdminRoutes = () => {
   const [routes, setRoutes] = useState(initialRoutes);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [isAddRouteModalOpen, setIsAddRouteModalOpen] = useState(false);
   const [isEditRouteModalOpen, setIsEditRouteModalOpen] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState<number | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<RouteData | null>(null);
   
   // Filter routes based on search term and status
   const filteredRoutes = routes.filter(route => {
@@ -88,18 +101,20 @@ const AdminRoutes = () => {
   });
   
   const handleEditRoute = (routeId: number) => {
-    setSelectedRoute(routeId);
-    setIsEditRouteModalOpen(true);
-    
-    // In a real app, you would fetch the route details here
-    toast({
-      title: "Edit Route",
-      description: `Editing route ID: ${routeId}`,
-    });
+    const routeToEdit = routes.find(route => route.id === routeId);
+    if (routeToEdit) {
+      setSelectedRoute(routeToEdit);
+      setIsEditRouteModalOpen(true);
+    } else {
+      toast({
+        title: "Error",
+        description: `Route with ID: ${routeId} not found`,
+        variant: "destructive",
+      });
+    }
   };
   
   const handleDeleteRoute = (routeId: number) => {
-    // Show confirmation toast before actually deleting
     toast({
       title: "Confirm Delete",
       description: `Are you sure you want to delete route ID: ${routeId}?`,
@@ -129,6 +144,37 @@ const AdminRoutes = () => {
         ? prev.filter(s => s !== status)
         : [...prev, status]
     );
+  };
+
+  const handleSaveRoute = (routeData: RouteData) => {
+    // For edit mode
+    if (selectedRoute) {
+      setRoutes(prevRoutes => 
+        prevRoutes.map(route => 
+          route.id === routeData.id ? routeData : route
+        )
+      );
+      
+      toast({
+        title: "Route Updated",
+        description: `Successfully updated route: ${routeData.name}`,
+      });
+    } 
+    // For add mode
+    else {
+      // Create a new route with the next ID
+      const newRoute = {
+        ...routeData,
+        id: Math.max(...routes.map(r => r.id), 0) + 1,
+      };
+      
+      setRoutes(prev => [...prev, newRoute]);
+      
+      toast({
+        title: "Route Created",
+        description: `Successfully added new route: ${newRoute.name}`,
+      });
+    }
   };
 
   return (
@@ -270,31 +316,22 @@ const AdminRoutes = () => {
         </CardContent>
       </Card>
       
-      {/* Handle modals using state instead of direct rendering */}
-      {isAddRouteModalOpen && (
-        <>
-          {setTimeout(() => {
-            toast({
-              title: "Add Route",
-              description: "Route form would appear here in a real implementation",
-            });
-            setIsAddRouteModalOpen(false);
-          }, 0)}
-        </>
-      )}
+      {/* Route Form Modals */}
+      <RouteFormModal 
+        isOpen={isAddRouteModalOpen}
+        onClose={() => setIsAddRouteModalOpen(false)}
+        onSave={handleSaveRoute}
+      />
       
-      {isEditRouteModalOpen && (
-        <>
-          {setTimeout(() => {
-            toast({
-              title: "Edit Route",
-              description: `Editing route ID: ${selectedRoute}`,
-            });
-            setIsEditRouteModalOpen(false);
-            setSelectedRoute(null);
-          }, 0)}
-        </>
-      )}
+      <RouteFormModal 
+        isOpen={isEditRouteModalOpen}
+        onClose={() => {
+          setIsEditRouteModalOpen(false);
+          setSelectedRoute(null);
+        }}
+        onSave={handleSaveRoute}
+        initialData={selectedRoute}
+      />
     </div>
   );
 };
