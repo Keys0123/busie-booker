@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -13,18 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
-
-type RouteData = {
-  id: number;
-  name: string;
-  startPoint: string;
-  endPoint: string;
-  distance: string;
-  duration: string;
-  fareRange: string;
-  buses: number;
-  status: string;
-};
+import { type RouteData } from '@/services/RouteService';
 
 type RouteFormModalProps = {
   isOpen: boolean;
@@ -42,7 +30,8 @@ const defaultRouteData: RouteData = {
   duration: '',
   fareRange: '',
   buses: 0,
-  status: 'Active'
+  status: 'Active',
+  imageUrl: ''
 };
 
 const RouteFormModal = ({ isOpen, onClose, onSave, initialData }: RouteFormModalProps) => {
@@ -197,6 +186,20 @@ const RouteFormModal = ({ isOpen, onClose, onSave, initialData }: RouteFormModal
                 />
                 <Label htmlFor="status">{isActive ? 'Active' : 'Inactive'}</Label>
               </div>
+            </div>
+
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="imageUrl">Image URL</Label>
+              <Input
+                id="imageUrl"
+                name="imageUrl"
+                value={formData.imageUrl || ''}
+                onChange={handleChange}
+                placeholder="e.g., https://example.com/image.jpg"
+              />
+              <p className="text-xs text-gray-500">
+                Leave blank to use a default image
+              </p>
             </div>
           </div>
           

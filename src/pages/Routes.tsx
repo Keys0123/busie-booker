@@ -1,50 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import RouteCard from '@/components/ui/RouteCard';
+import { RouteService } from '@/services/RouteService';
 
 const RoutesPage = () => {
-  // Popular bus routes in Nepal
-  const popularRoutes = [
-    {
-      from: "Kathmandu",
-      to: "Pokhara",
-      price: 1200,
-      imageUrl: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80"
-    },
-    {
-      from: "Kathmandu",
-      to: "Chitwan",
-      price: 800,
-      imageUrl: "https://images.unsplash.com/photo-1544735716-95351a09c5b5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80"
-    },
-    {
-      from: "Pokhara",
-      to: "Kathmandu",
-      price: 1200,
-      imageUrl: "https://images.unsplash.com/photo-1585108718981-c5e09fd30f97?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80"
-    },
-    {
-      from: "Kathmandu",
-      to: "Lumbini",
-      price: 1500,
-      imageUrl: "https://images.unsplash.com/photo-1573471292307-6698cb6addb9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80"
-    },
-    {
-      from: "Pokhara",
-      to: "Chitwan",
-      price: 900,
-      imageUrl: "https://images.unsplash.com/photo-1561016696-094e2baeab5e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80"
-    },
-    {
-      from: "Kathmandu",
-      to: "Mustang",
-      price: 2200,
-      imageUrl: "https://images.unsplash.com/photo-1575999502951-4ab25b5ca889?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80"
-    }
-  ];
+  const [popularRoutes, setPopularRoutes] = useState([]);
+  
+  // Fetch active routes from the service
+  useEffect(() => {
+    const activeRoutes = RouteService.getActiveRoutes();
+    
+    // Map routes to the format needed by RouteCard
+    const formattedRoutes = activeRoutes.map(route => ({
+      from: route.startPoint,
+      to: route.endPoint,
+      price: parseInt(route.fareRange.split('-')[0].replace(/\D/g, '')) || 1000, // Extract first price from range
+      imageUrl: route.imageUrl || "https://images.unsplash.com/photo-1544735716-392fe2489ffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80"
+    }));
+    
+    setPopularRoutes(formattedRoutes);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -70,15 +48,26 @@ const RoutesPage = () => {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {popularRoutes.map((route, index) => (
-                <RouteCard 
-                  key={index}
-                  from={route.from}
-                  to={route.to}
-                  price={route.price}
-                  imageUrl={route.imageUrl}
-                />
-              ))}
+              {popularRoutes.length > 0 ? (
+                popularRoutes.map((route, index) => (
+                  <RouteCard 
+                    key={index}
+                    from={route.from}
+                    to={route.to}
+                    price={route.price}
+                    imageUrl={route.imageUrl}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 text-center py-12">
+                  <h3 className="text-xl font-medium text-gray-600">
+                    No active routes available at the moment
+                  </h3>
+                  <p className="mt-2 text-gray-500">
+                    Please check back later or contact support for more information.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </section>
