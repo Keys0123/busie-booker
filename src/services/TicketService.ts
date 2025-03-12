@@ -1,7 +1,15 @@
-
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { format } from "date-fns";
+
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+    previousAutoTable: {
+      finalY: number;
+    } | undefined;
+  }
+}
 
 export interface TicketData {
   bookingId: string;
@@ -74,7 +82,6 @@ export class TicketService {
       passenger.seat
     ]);
     
-    // @ts-ignore - jspdf-autotable types are not recognized by TypeScript
     doc.autoTable({
       head: [tableColumn],
       body: tableRows,
@@ -85,15 +92,15 @@ export class TicketService {
     });
     
     // Add payment information
-    const finalY = doc.previousAutoTable?.finalY || 150;
+    const finalY = (doc.previousAutoTable?.finalY || 150) + 15;
     
     doc.setFontSize(12);
     doc.setTextColor(70, 70, 70);
-    doc.text("Payment Information", 14, finalY + 15);
+    doc.text("Payment Information", 14, finalY);
     
     doc.setFontSize(10);
-    doc.text(`Amount Paid: NPR ${ticketData.totalAmount.toLocaleString()}`, 14, finalY + 25);
-    doc.text(`Payment Method: ${ticketData.paymentMethod}`, 14, finalY + 32);
+    doc.text(`Amount Paid: NPR ${ticketData.totalAmount.toLocaleString()}`, 14, finalY + 10);
+    doc.text(`Payment Method: ${ticketData.paymentMethod}`, 14, finalY + 17);
     
     // Add footer with terms and contact
     doc.setFontSize(8);
