@@ -8,6 +8,9 @@ import Footer from '@/components/layout/Footer';
 import { useToast } from "@/hooks/use-toast";
 import { NotificationService, NotificationType } from '@/services/NotificationService';
 import NotificationPreferences from '@/components/booking/NotificationPreferences';
+import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
+import PaymentProcessor from '@/components/payment/PaymentProcessor';
+import { PaymentMethod } from '@/services/PaymentService';
 
 const BookingConfirmation = () => {
   const location = useLocation();
@@ -19,6 +22,32 @@ const BookingConfirmation = () => {
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [notificationsSent, setNotificationsSent] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('credit-card');
+  const [paymentComplete, setPaymentComplete] = useState(false);
+  
+  // Check if payment was completed via URL params (for eSewa redirect)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const paymentStatus = params.get('q');
+    
+    if (paymentStatus === 'su') {
+      // eSewa success
+      setPaymentComplete(true);
+      toast({
+        title: "Payment Successful",
+        description: "Your eSewa payment has been processed successfully.",
+        duration: 5000,
+      });
+    } else if (paymentStatus === 'fu') {
+      // eSewa failure
+      toast({
+        title: "Payment Failed",
+        description: "There was an issue processing your eSewa payment.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  }, [location.search]);
   
   // If no booking data is available, redirect to the home page
   useEffect(() => {
@@ -128,6 +157,14 @@ const BookingConfirmation = () => {
       setIsProcessing(false);
     }
   };
+
+  const handlePaymentSuccess = () => {
+    setPaymentComplete(true);
+  };
+  
+  const handlePaymentCancel = () => {
+    // Handle payment cancellation if needed
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -135,18 +172,47 @@ const BookingConfirmation = () => {
       
       <main className="flex-1 bg-gray-50 pt-20 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          {/* Success Message */}
-          <div className="bg-green-50 rounded-xl p-6 flex items-center gap-4 mb-8 animate-fade-in-up">
-            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-              <Check size={24} className="text-green-600" />
+          {/* Success Message - Only show if payment is complete */}
+          {paymentComplete && (
+            <div className="bg-green-50 rounded-xl p-6 flex items-center gap-4 mb-8 animate-fade-in-up">
+              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                <Check size={24} className="text-green-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-green-800 mb-1">Booking Confirmed!</h1>
+                <p className="text-green-700">
+                  Your booking has been confirmed. Ticket details have been sent to your email.
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-green-800 mb-1">Booking Confirmed!</h1>
-              <p className="text-green-700">
-                Your booking has been confirmed. Ticket details have been sent to your email.
+          )}
+          
+          {/* Payment Selection - Only show if payment is not complete */}
+          {!paymentComplete && (
+            <div className="bg-white rounded-xl shadow-soft p-6 mb-8 animate-fade-in-up">
+              <h2 className="text-xl font-semibold mb-4">Complete Your Payment</h2>
+              <p className="text-gray-600 mb-6">
+                Please select a payment method to complete your booking.
               </p>
+              
+              <div className="space-y-6">
+                <PaymentMethodSelector 
+                  selectedMethod={paymentMethod}
+                  onMethodChange={setPaymentMethod}
+                />
+                
+                <div className="pt-4 border-t border-gray-100">
+                  <PaymentProcessor
+                    paymentMethod={paymentMethod}
+                    amount={totalAmount}
+                    bookingId={bookingId}
+                    onSuccess={handlePaymentSuccess}
+                    onCancel={handlePaymentCancel}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Booking Information */}
           <div className="bg-white rounded-xl shadow-soft overflow-hidden mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
@@ -231,64 +297,80 @@ const BookingConfirmation = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-gray-600">Payment Method</div>
-                    <div className="font-medium">Credit Card</div>
+                    <div className="font-medium">
+                      {paymentComplete ? (
+                        paymentMethod === 'esewa' ? 'eSewa' : 
+                        paymentMethod === 'khalti' ? 'Khalti' : 
+                        'Credit Card'
+                      ) : 'Pending'}
+                    </div>
                   </div>
                   <div>
                     <div className="text-gray-600">Payment Status</div>
-                    <div className="text-green-600 font-medium">Paid</div>
+                    <div className={`font-medium ${paymentComplete ? 'text-green-600' : 'text-amber-600'}`}>
+                      {paymentComplete ? 'Paid' : 'Pending'}
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-gray-600">Transaction ID</div>
-                    <div className="font-medium">TXN123456789</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Total Amount</div>
-                    <div className="font-medium">NPR {totalAmount.toLocaleString()}</div>
-                  </div>
+                  {paymentComplete && (
+                    <>
+                      <div>
+                        <div className="text-gray-600">Transaction ID</div>
+                        <div className="font-medium">TXN{Math.floor(100000000 + Math.random() * 900000000)}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600">Total Amount</div>
+                        <div className="font-medium">NPR {totalAmount.toLocaleString()}</div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               
-              {/* Notification Preferences */}
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <div className="flex items-center mb-4">
-                  <Bell size={18} className="text-primary mr-2" />
-                  <h3 className="font-medium">Stay Updated</h3>
+              {/* Notification Preferences - Only show if payment is complete */}
+              {paymentComplete && (
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <div className="flex items-center mb-4">
+                    <Bell size={18} className="text-primary mr-2" />
+                    <h3 className="font-medium">Stay Updated</h3>
+                  </div>
+                  
+                  <NotificationPreferences 
+                    emailEnabled={emailNotifications}
+                    smsEnabled={smsNotifications}
+                    onEmailChange={(checked) => setEmailNotifications(checked)}
+                    onSmsChange={(checked) => setSmsNotifications(checked)}
+                  />
+                  
+                  {isProcessing && (
+                    <div className="mt-3 text-sm text-gray-600">
+                      Processing notifications...
+                    </div>
+                  )}
+                  
+                  {notificationsSent && (
+                    <div className="mt-3 text-sm text-green-600">
+                      Notifications sent successfully! You'll receive updates about your journey.
+                    </div>
+                  )}
                 </div>
-                
-                <NotificationPreferences 
-                  emailEnabled={emailNotifications}
-                  smsEnabled={smsNotifications}
-                  onEmailChange={(checked) => setEmailNotifications(checked)}
-                  onSmsChange={(checked) => setSmsNotifications(checked)}
-                />
-                
-                {isProcessing && (
-                  <div className="mt-3 text-sm text-gray-600">
-                    Processing notifications...
-                  </div>
-                )}
-                
-                {notificationsSent && (
-                  <div className="mt-3 text-sm text-green-600">
-                    Notifications sent successfully! You'll receive updates about your journey.
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
           
-          {/* Actions */}
-          <div className="flex flex-wrap justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <button className="btn-secondary flex items-center">
-              <Download size={18} className="mr-2" />
-              Download E-Ticket
-            </button>
-            
-            <Link to="/" className="btn-primary flex items-center">
-              <Home size={18} className="mr-2" />
-              Return to Home
-            </Link>
-          </div>
+          {/* Actions - Only show if payment is complete */}
+          {paymentComplete && (
+            <div className="flex flex-wrap justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <button className="btn-secondary flex items-center">
+                <Download size={18} className="mr-2" />
+                Download E-Ticket
+              </button>
+              
+              <Link to="/" className="btn-primary flex items-center">
+                <Home size={18} className="mr-2" />
+                Return to Home
+              </Link>
+            </div>
+          )}
         </div>
       </main>
       
