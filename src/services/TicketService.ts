@@ -1,15 +1,11 @@
+
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+// Import the autoTable plugin correctly
+import { default as autoTable } from "jspdf-autotable";
 import { format } from "date-fns";
 
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    previousAutoTable: {
-      finalY: number;
-    } | undefined;
-  }
-}
+// We don't need to declare the module as we'll be using the autoTable directly
+// and not through the jsPDF prototype extension
 
 export interface TicketData {
   bookingId: string;
@@ -82,7 +78,8 @@ export class TicketService {
       passenger.seat
     ]);
     
-    doc.autoTable({
+    // Use the imported autoTable function directly
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 120,
@@ -92,7 +89,8 @@ export class TicketService {
     });
     
     // Add payment information
-    const finalY = (doc.previousAutoTable?.finalY || 150) + 15;
+    // Use the finalY property correctly from the returned object
+    const finalY = (doc as any).lastAutoTable.finalY + 15;
     
     doc.setFontSize(12);
     doc.setTextColor(70, 70, 70);
