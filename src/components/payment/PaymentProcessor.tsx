@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, LoaderCircle } from 'lucide-react';
 import { PaymentMethod, PaymentService, PaymentDetails } from '@/services/PaymentService';
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface PaymentProcessorProps {
   paymentMethod: PaymentMethod;
@@ -25,6 +25,20 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState<string>('Processing your payment...');
+  
+  // Listen for Khalti status updates
+  useEffect(() => {
+    const handleKhaltiStatusUpdate = (event: CustomEvent) => {
+      setStatusMessage(event.detail.status);
+    };
+    
+    document.addEventListener('khalti-status-update', handleKhaltiStatusUpdate as EventListener);
+    
+    return () => {
+      document.removeEventListener('khalti-status-update', handleKhaltiStatusUpdate as EventListener);
+    };
+  }, []);
   
   const handlePayment = () => {
     setProcessing(true);
@@ -42,17 +56,27 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
     };
     
     if (paymentMethod === 'esewa') {
-      // eSewa will redirect to another page, so we proceed directly
-      PaymentService.initiateEsewaPayment(paymentDetails);
+      // For eSewa, we use their direct payment gateway which will redirect to another page
+      // We'll show a temporary processing dialog before redirecting
+      setDialogOpen(true);
+      setPaymentStatus('processing');
+      setStatusMessage('Redirecting to eSewa payment gateway...');
+      
+      // After a short delay, redirect to eSewa
+      setTimeout(() => {
+        PaymentService.initiateEsewaPayment(paymentDetails);
+      }, 1500);
     } else if (paymentMethod === 'khalti') {
       setDialogOpen(true);
       setPaymentStatus('processing');
+      setStatusMessage('Initializing Khalti payment...');
       
-      // Show Khalti payment dialog
+      // Show Khalti payment dialog with more realistic processing
       PaymentService.initiateKhaltiPayment(
         paymentDetails,
         (response) => {
           console.log('Khalti payment successful:', response);
+          setStatusMessage('Payment successful! Verifying transaction...');
           setPaymentStatus('success');
           
           // Verify payment on server (would be done through API in production)
@@ -87,23 +111,64 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
       );
     } else {
       // For credit card, we would show a form
-      // In this demo, we'll just simulate a successful payment
+      // In this demo, we'll simulate a more realistic payment processing flow
       setDialogOpen(true);
       setPaymentStatus('processing');
       
-      setTimeout(() => {
-        setPaymentStatus('success');
-        
-        setTimeout(() => {
-          setDialogOpen(false);
-          onSuccess();
-          toast({
-            title: "Payment Successful",
-            description: "Your payment has been processed successfully.",
-            duration: 5000,
-          });
-        }, 2000);
-      }, 2000);
+      const creditCardSteps = [
+        { message: "Validating card details...", delay: 1500 },
+        { message: "Processing payment...", delay: 2000 },
+        { message: "Verifying with bank...", delay: 2500 },
+        { message: "Finalizing transaction...", delay: 1500 }
+      ];
+      
+      let currentStep = 0;
+      
+      const processStep = () => {
+        if (currentStep < creditCardSteps.length) {
+          setStatusMessage(creditCardSteps[currentStep].message);
+          setTimeout(() => {
+            currentStep++;
+            processStep();
+          }, creditCardSteps[currentStep].delay);
+        } else {
+          // All steps complete, simulate success or failure
+          const isSuccessful = Math.random() > 0.2; // 80% success rate
+          
+          if (isSuccessful) {
+            setPaymentStatus('success');
+            setStatusMessage('Payment successful!');
+            
+            setTimeout(() => {
+              setDialogOpen(false);
+              onSuccess();
+              toast({
+                title: "Payment Successful",
+                description: "Your payment has been processed successfully.",
+                duration: 5000,
+              });
+            }, 2000);
+          } else {
+            setPaymentStatus('error');
+            setError('Payment was declined by the bank. Please try another card or payment method.');
+            
+            setTimeout(() => {
+              setDialogOpen(false);
+              setProcessing(false);
+              
+              toast({
+                title: "Payment Failed",
+                description: "Your payment was declined by the bank. Please try another card or payment method.",
+                variant: "destructive",
+                duration: 5000,
+              });
+            }, 3000);
+          }
+        }
+      };
+      
+      // Start processing steps
+      processStep();
     }
   };
   
@@ -141,16 +206,19 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
               {paymentStatus === 'success' && "Payment Successful"}
               {paymentStatus === 'error' && "Payment Failed"}
             </DialogTitle>
+            <DialogDescription>
+              {statusMessage}
+            </DialogDescription>
           </DialogHeader>
           
           <div className="flex flex-col items-center justify-center py-6">
             {paymentStatus === 'processing' && (
               <div className="flex flex-col items-center">
                 <LoaderCircle size={48} className="text-primary animate-spin mb-4" />
-                <p className="text-center text-gray-600">
-                  {paymentMethod === 'khalti' ? "Processing your Khalti payment..." : 
-                   paymentMethod === 'esewa' ? "Processing your eSewa payment..." :
-                   "Processing your payment..."}
+                <p className="text-center text-gray-600 mt-2">
+                  {paymentMethod === 'khalti' ? "This may take a few moments..." : 
+                   paymentMethod === 'esewa' ? "You'll be redirected to eSewa..." :
+                   "Please don't close this window..."}
                 </p>
               </div>
             )}

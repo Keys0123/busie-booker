@@ -37,8 +37,11 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           }`}
           onClick={() => onMethodChange('esewa')}
         >
-          <div className="h-8 w-8 mb-2 flex items-center justify-center">
-            <Wallet className={`h-6 w-6 ${selectedMethod === 'esewa' ? 'text-green-500' : 'text-gray-500'}`} />
+          <div className="h-8 w-8 mb-2 flex items-center justify-center relative">
+            <div className={`rounded-full h-6 w-6 flex items-center justify-center ${selectedMethod === 'esewa' ? 'bg-green-500' : 'bg-gray-200'}`}>
+              <Wallet className={`h-4 w-4 text-white`} />
+            </div>
+            <span className={`absolute -bottom-1 -right-1 text-xs font-bold ${selectedMethod === 'esewa' ? 'text-green-600' : 'text-gray-600'}`}>e</span>
           </div>
           <span className={`font-medium ${selectedMethod === 'esewa' ? 'text-green-600' : 'text-gray-700'}`}>eSewa</span>
         </div>
@@ -52,7 +55,9 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           onClick={() => onMethodChange('khalti')}
         >
           <div className="h-8 w-8 mb-2 flex items-center justify-center">
-            <Wallet className={`h-6 w-6 ${selectedMethod === 'khalti' ? 'text-purple-500' : 'text-gray-500'}`} />
+            <div className={`rounded-full h-6 w-6 flex items-center justify-center ${selectedMethod === 'khalti' ? 'bg-purple-600' : 'bg-gray-200'}`}>
+              <span className="text-white font-bold text-xs">K</span>
+            </div>
           </div>
           <span className={`font-medium ${selectedMethod === 'khalti' ? 'text-purple-600' : 'text-gray-700'}`}>Khalti</span>
         </div>

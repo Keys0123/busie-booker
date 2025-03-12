@@ -57,68 +57,62 @@ export class PaymentService {
     console.log('Initiating Khalti payment:', details);
     
     // In a real implementation, you would load the Khalti SDK and use it
-    // This is a mock implementation for demonstration
+    // This is a more realistic simulation for demonstration
     const mockPayment = () => {
-      // Simulate payment processing
-      setTimeout(() => {
-        const success = Math.random() > 0.2; // 80% success rate for demo
-        
-        if (success) {
-          const paymentResponse = {
-            idx: `khalti-${Date.now()}`,
-            amount: details.amount,
-            mobile: '98XXXXXXXX',
-            product_identity: details.productId,
-            product_name: details.productName,
-            token: `mock-token-${Date.now()}`,
-            status: 'Completed'
-          };
+      // Create phases for payment processing to make it more realistic
+      const phases = [
+        { message: "Connecting to Khalti...", delay: 1500 },
+        { message: "Validating payment details...", delay: 2000 },
+        { message: "Processing your payment...", delay: 3000 },
+        { message: "Verifying transaction...", delay: 2500 }
+      ];
+      
+      let currentPhase = 0;
+      
+      // Function to handle each phase of the payment process
+      const processPhase = (phase: number, statusCallback: (status: string) => void) => {
+        if (phase >= phases.length) {
+          // All phases complete, determine success or failure
+          const success = Math.random() > 0.3; // 70% success rate for demo
           
-          onSuccess(paymentResponse);
-        } else {
-          onError({ message: 'Payment failed or cancelled by user' });
+          if (success) {
+            const paymentResponse = {
+              idx: `khalti-${Date.now()}`,
+              amount: details.amount,
+              mobile: '98XXXXXXXX',
+              product_identity: details.productId,
+              product_name: details.productName,
+              token: `mock-token-${Date.now()}`,
+              status: 'Completed'
+            };
+            
+            onSuccess(paymentResponse);
+          } else {
+            onError({ message: 'Payment failed or was declined by the bank' });
+          }
+          return;
         }
-      }, 2000);
+        
+        // Update status with current phase message
+        statusCallback(phases[phase].message);
+        
+        // Process next phase after delay
+        setTimeout(() => {
+          processPhase(phase + 1, statusCallback);
+        }, phases[phase].delay);
+      };
+      
+      // Start processing with first phase
+      processPhase(0, (status) => {
+        // This callback will be used by the payment processor to update UI
+        // We'll add this functionality in the PaymentProcessor component
+        document.dispatchEvent(new CustomEvent('khalti-status-update', { 
+          detail: { status }
+        }));
+      });
     };
     
-    // In a real implementation, you would have:
-    /*
-    // Load Khalti script if not already loaded
-    if (!document.getElementById('khalti-script')) {
-      const script = document.createElement('script');
-      script.id = 'khalti-script';
-      script.src = 'https://khalti.s3.ap-south-1.amazonaws.com/KPG/dist/2020.12.22.0.0.0/khalti-checkout.iffe.js';
-      script.async = true;
-      script.onload = () => {
-        // Initialize Khalti config and trigger payment
-        const config = {
-          publicKey: KHALTI_MERCHANT_ID,
-          productIdentity: details.productId,
-          productName: details.productName,
-          productUrl: details.productUrl,
-          amount: details.amount * 100, // Khalti expects amount in paisa
-          eventHandler: {
-            onSuccess: onSuccess,
-            onError: onError,
-            onClose: () => console.log('Khalti widget closed')
-          }
-        };
-        
-        const checkout = new window.KhaltiCheckout(config);
-        checkout.show({ amount: details.amount * 100 });
-      };
-      document.head.appendChild(script);
-    } else {
-      // If script is already loaded, just trigger payment
-      const config = {
-        // ... same config as above
-      };
-      const checkout = new window.KhaltiCheckout(config);
-      checkout.show({ amount: details.amount * 100 });
-    }
-    */
-    
-    // For demo, just call the mock function
+    // For demo, call the mock function
     mockPayment();
   }
   
