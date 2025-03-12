@@ -11,6 +11,8 @@ import NotificationPreferences from '@/components/booking/NotificationPreference
 import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
 import PaymentProcessor from '@/components/payment/PaymentProcessor';
 import { PaymentMethod } from '@/services/PaymentService';
+import { TicketService } from '@/services/TicketService';
+import { Button } from '@/components/ui/button';
 
 const BookingConfirmation = () => {
   const location = useLocation();
@@ -164,6 +166,39 @@ const BookingConfirmation = () => {
   
   const handlePaymentCancel = () => {
     // Handle payment cancellation if needed
+  };
+  
+  const handleDownloadTicket = () => {
+    const paymentMethodName = 
+      paymentMethod === 'esewa' ? 'eSewa' : 
+      paymentMethod === 'khalti' ? 'Khalti' : 
+      'Credit Card';
+    
+    // Prepare ticket data
+    const ticketData = {
+      bookingId,
+      bookingDate,
+      travelDate,
+      from,
+      to,
+      busName: bus.busName,
+      busType: bus.busType,
+      departureTime: bus.departureTime,
+      arrivalTime: bus.arrivalTime,
+      passengerDetails,
+      totalAmount,
+      paymentMethod: paymentMethodName
+    };
+    
+    // Generate and download the ticket
+    TicketService.generateTicket(ticketData);
+    
+    // Show toast notification
+    toast({
+      title: "Ticket Downloaded",
+      description: "Your e-ticket has been downloaded successfully.",
+      duration: 3000,
+    });
   };
   
   return (
@@ -360,10 +395,14 @@ const BookingConfirmation = () => {
           {/* Actions - Only show if payment is complete */}
           {paymentComplete && (
             <div className="flex flex-wrap justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <button className="btn-secondary flex items-center">
+              <Button 
+                variant="secondary" 
+                className="flex items-center"
+                onClick={handleDownloadTicket}
+              >
                 <Download size={18} className="mr-2" />
                 Download E-Ticket
-              </button>
+              </Button>
               
               <Link to="/" className="btn-primary flex items-center">
                 <Home size={18} className="mr-2" />
