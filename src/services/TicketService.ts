@@ -1,4 +1,5 @@
 
+
 import { jsPDF } from "jspdf";
 // Import the autoTable plugin correctly
 import { default as autoTable } from "jspdf-autotable";
@@ -74,7 +75,7 @@ export class TicketService {
     const tableRows = ticketData.passengerDetails.map(passenger => [
       passenger.name,
       passenger.age.toString(),
-      passenger.gender,
+      passenger.gender.charAt(0).toUpperCase() + passenger.gender.slice(1),
       passenger.seat
     ]);
     
@@ -110,3 +111,4 @@ export class TicketService {
     doc.save(`ticket-${ticketData.bookingId}.pdf`);
   }
 }
+
