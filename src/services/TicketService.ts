@@ -1,5 +1,4 @@
 
-
 import { jsPDF } from "jspdf";
 // Import the autoTable plugin correctly
 import { default as autoTable } from "jspdf-autotable";
@@ -70,28 +69,35 @@ export class TicketService {
     doc.setTextColor(70, 70, 70);
     doc.text("Passenger Details", 14, 115);
     
-    // Create passenger table
-    const tableColumn = ["Name", "Age", "Gender", "Seat No."];
-    const tableRows = ticketData.passengerDetails.map(passenger => [
-      passenger.name,
-      passenger.age.toString(),
-      passenger.gender.charAt(0).toUpperCase() + passenger.gender.slice(1),
-      passenger.seat
-    ]);
-    
-    // Use the imported autoTable function directly
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 120,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 98, 255], textColor: [255, 255, 255] },
-      margin: { top: 120, left: 14, right: 14 }
-    });
+    // Create passenger table (only if passengerDetails exists and has elements)
+    if (ticketData.passengerDetails && ticketData.passengerDetails.length > 0) {
+      const tableColumn = ["Name", "Age", "Gender", "Seat No."];
+      const tableRows = ticketData.passengerDetails.map(passenger => [
+        passenger.name || "N/A",
+        passenger.age ? passenger.age.toString() : "N/A",
+        passenger.gender ? (passenger.gender.charAt(0).toUpperCase() + passenger.gender.slice(1)) : "N/A",
+        passenger.seat || "N/A"
+      ]);
+      
+      // Use the imported autoTable function directly
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 120,
+        theme: 'grid',
+        headStyles: { fillColor: [41, 98, 255], textColor: [255, 255, 255] },
+        margin: { top: 120, left: 14, right: 14 }
+      });
+    } else {
+      doc.setFontSize(10);
+      doc.text("No passenger details available", 14, 125);
+      // Set a manual finalY if no table is rendered
+      (doc as any).lastAutoTable = { finalY: 135 };
+    }
     
     // Add payment information
     // Use the finalY property correctly from the returned object
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    const finalY = (doc as any).lastAutoTable?.finalY + 15 || 150;
     
     doc.setFontSize(12);
     doc.setTextColor(70, 70, 70);
@@ -111,4 +117,3 @@ export class TicketService {
     doc.save(`ticket-${ticketData.bookingId}.pdf`);
   }
 }
-

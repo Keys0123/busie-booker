@@ -7,6 +7,10 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import SeatMap, { Seat } from '@/components/ui/SeatMap';
 import { BusInfo } from '@/components/ui/BusCard';
+import { TicketService, TicketData } from '@/services/TicketService';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 const SeatSelection = () => {
   const { busId } = useParams<{ busId: string }>();
@@ -31,7 +35,7 @@ const SeatSelection = () => {
   useEffect(() => {
     // In a real app, this would be an API call to get the bus details and seat layout
     const mockBus: BusInfo = {
-      id: 'bus1',
+      id: busId || 'bus1',
       busName: 'Sajha Yatayat',
       busType: 'Deluxe',
       departureTime: '06:30 AM',
@@ -101,7 +105,7 @@ const SeatSelection = () => {
     } else if (seat.status === 'available') {
       // Check if max seats are already selected
       if (selectedSeats.length >= passengers) {
-        // If max reached, we can show a message or toast here
+        toast.error(`You can only select up to ${passengers} seats`);
         return;
       }
       
@@ -118,9 +122,57 @@ const SeatSelection = () => {
     updatedDetails[index] = { ...updatedDetails[index], [field]: value };
     setPassengerDetails(updatedDetails);
   };
+
+  const downloadTicket = () => {
+    if (!bus) return;
+    
+    // Generate a random booking ID
+    const bookingId = `TKT${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
+    
+    // Prepare passenger details
+    const formattedPassengerDetails = passengerDetails.map(passenger => ({
+      name: passenger.name,
+      age: parseInt(passenger.age) || 0,
+      gender: passenger.gender,
+      seat: passenger.seat
+    }));
+    
+    // Create ticket data
+    const ticketData: TicketData = {
+      bookingId,
+      bookingDate: new Date(),
+      travelDate: date,
+      from,
+      to,
+      busName: bus.busName,
+      busType: bus.busType,
+      departureTime: bus.departureTime,
+      arrivalTime: bus.arrivalTime,
+      passengerDetails: formattedPassengerDetails,
+      totalAmount: bus.price * selectedSeats.length,
+      paymentMethod: 'Credit Card' // Default payment method
+    };
+    
+    // Generate the ticket PDF
+    TicketService.generateTicket(ticketData);
+    toast.success("E-ticket downloaded successfully!");
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if passenger details are complete
+    const isPassengerDetailsComplete = passengerDetails.every(
+      passenger => passenger.name && passenger.age && passenger.gender
+    );
+    
+    if (!isPassengerDetailsComplete) {
+      toast.error("Please complete all passenger details");
+      return;
+    }
+    
+    // Download the ticket
+    downloadTicket();
     
     // Here we would normally validate and process the booking
     // For demo, we'll just navigate to a confirmation page
@@ -210,7 +262,7 @@ const SeatSelection = () => {
                 <div className="bg-white rounded-xl shadow-soft p-6 animate-fade-in">
                   <h2 className="text-xl font-semibold mb-4">Passenger Details</h2>
                   
-                  <form onSubmit={handleSubmit}>
+                  <form id="passenger-form" onSubmit={handleSubmit}>
                     {passengerDetails.map((passenger, index) => (
                       <div key={index} className="mb-6 p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center justify-between mb-3">
@@ -220,12 +272,12 @@ const SeatSelection = () => {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <Label htmlFor={`name-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                               Full Name
-                            </label>
-                            <input 
+                            </Label>
+                            <Input 
+                              id={`name-${index}`}
                               type="text"
-                              className="form-input"
                               placeholder="Enter full name"
                               value={passenger.name}
                               onChange={(e) => handlePassengerDetailsChange(index, 'name', e.target.value)}
@@ -235,14 +287,14 @@ const SeatSelection = () => {
                           
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <Label htmlFor={`age-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                                 Age
-                              </label>
-                              <input 
+                              </Label>
+                              <Input 
+                                id={`age-${index}`}
                                 type="number"
                                 min="1"
                                 max="120"
-                                className="form-input"
                                 placeholder="Age"
                                 value={passenger.age}
                                 onChange={(e) => handlePassengerDetailsChange(index, 'age', e.target.value)}
@@ -251,10 +303,11 @@ const SeatSelection = () => {
                             </div>
                             
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <Label htmlFor={`gender-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                                 Gender
-                              </label>
+                              </Label>
                               <select
+                                id={`gender-${index}`}
                                 className="form-input"
                                 value={passenger.gender}
                                 onChange={(e) => handlePassengerDetailsChange(index, 'gender', e.target.value)}
@@ -330,10 +383,18 @@ const SeatSelection = () => {
                     form="passenger-form"
                     className="btn-primary w-full py-3 flex items-center justify-center"
                     disabled={selectedSeats.length === 0}
-                    onClick={handleSubmit}
                   >
                     <CreditCard size={18} className="mr-2" />
                     Proceed to Payment
+                  </button>
+                  
+                  <button 
+                    type="button"
+                    onClick={downloadTicket}
+                    className="btn-secondary w-full py-3 flex items-center justify-center"
+                    disabled={selectedSeats.length === 0}
+                  >
+                    Download E-Ticket
                   </button>
                   
                   <p className="text-xs text-gray-500 text-center">
