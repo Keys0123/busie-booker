@@ -7,7 +7,6 @@ import {
   Bus, 
   CalendarCheck, 
   Users, 
-  Settings, 
   LogOut, 
   Menu, 
   X,

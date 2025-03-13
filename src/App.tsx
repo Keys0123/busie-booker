@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Index from './pages/Index';
 import About from './pages/About';
-import Routes from './pages/Routes';
+import RoutesPage from './pages/Routes'; // Renamed import to avoid conflict
 import Search from './pages/Search';
 import Contact from './pages/Contact';
 import Help from './pages/Help';
@@ -13,7 +14,7 @@ import SeatSelection from './pages/SeatSelection';
 import BookingConfirmation from './pages/BookingConfirmation';
 import NotFound from './pages/NotFound';
 import AdminLogin from './pages/admin/Login';
-import AdminLayout from './components/layout/AdminLayout';
+import AdminLayout from './components/admin/AdminLayout'; // Fixed import path
 import Dashboard from './pages/admin/Dashboard';
 import Buses from './pages/admin/Buses';
 import AdminRoutes from './pages/admin/Routes';
@@ -27,7 +28,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/about" element={<About />} />
-        <Route path="/routes" element={<Routes />} />
+        <Route path="/routes" element={<RoutesPage />} /> {/* Updated component reference */}
         <Route path="/search" element={<Search />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<Help />} />
