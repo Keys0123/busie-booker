@@ -1,171 +1,133 @@
-
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { MenuIcon, X, User, Phone, Shield } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const location = useLocation();
-  
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-  
-  // Close menu when location changes
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location]);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   return (
-    <header 
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out px-4 md:px-8",
-        isScrolled ? "bg-white/80 backdrop-blur-md shadow-soft py-2" : "bg-transparent py-4"
-      )}
-    >
-      <div className="container mx-auto">
-        <nav className="flex items-center justify-between">
+    <header className="bg-white fixed w-full z-50 shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="text-primary font-bold text-2xl">
-            NepalBus
+          <Link to="/" className="flex items-center space-x-2">
+            <span className="text-xl font-bold text-primary">NepalBus</span>
           </Link>
-          
+
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <NavLinks />
-            
-            <div className="flex items-center gap-4">
-              <Link 
-                to="/login" 
-                className="flex items-center gap-2 text-sm font-medium"
-              >
-                <User size={16} /> Sign In
-              </Link>
-              
-              <Link 
-                to="/contact" 
-                className="flex items-center gap-2 text-sm font-medium"
-              >
-                <Phone size={16} /> Contact
-              </Link>
-              
-              <Link 
-                to="/admin/login" 
-                className="flex items-center gap-2 text-sm font-medium text-primary"
-              >
-                <Shield size={16} /> Admin
-              </Link>
-              
-              <Link 
-                to="/search" 
-                className="btn-primary"
-              >
-                Book Tickets
-              </Link>
-            </div>
+          <nav className="hidden md:flex space-x-8">
+            <Link to="/" className="text-gray-600 hover:text-primary transition-colors">
+              Home
+            </Link>
+            <Link to="/routes" className="text-gray-600 hover:text-primary transition-colors">
+              Routes
+            </Link>
+            <Link to="/about" className="text-gray-600 hover:text-primary transition-colors">
+              About
+            </Link>
+            <Link to="/contact" className="text-gray-600 hover:text-primary transition-colors">
+              Contact
+            </Link>
+            <Link to="/help" className="text-gray-600 hover:text-primary transition-colors">
+              Help
+            </Link>
+          </nav>
+
+          {/* Authentication Buttons (Desktop) */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link to="/profile" className="text-gray-600 hover:text-primary transition-colors">
+              My Profile
+            </Link>
+            <Link to="/login" className="px-4 py-2 border border-primary text-primary rounded hover:bg-primary hover:text-white transition-colors">
+              Log In
+            </Link>
+            <Link to="/register" className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors">
+              Register
+            </Link>
           </div>
-          
-          {/* Mobile menu button */}
-          <button 
-            className="md:hidden z-50" 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={toggleMenu}
+            className="md:hidden text-gray-600 hover:text-primary focus:outline-none transition-colors"
           >
-            {isMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
-        </nav>
-      </div>
-      
-      {/* Mobile menu */}
-      <div 
-        className={cn(
-          "fixed inset-0 bg-white z-40 transform transition-transform duration-300 ease-in-out md:hidden",
-          isMenuOpen ? "translate-x-0" : "translate-x-full"
-        )}
-      >
-        <div className="flex flex-col h-full pt-24 px-8 pb-8">
-          <MobileNavLinks />
           
-          <div className="mt-auto flex flex-col gap-4">
-            <Link 
-              to="/login" 
-              className="btn-secondary w-full text-center"
-            >
-              Sign In
-            </Link>
-            
-            <Link 
-              to="/admin/login" 
-              className="flex items-center justify-center gap-2 py-2 text-primary border border-primary rounded-md"
-            >
-              <Shield size={16} /> Admin Login
-            </Link>
-            
-            <Link 
-              to="/search" 
-              className="btn-primary w-full text-center"
-            >
-              Book Tickets
-            </Link>
-          </div>
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden absolute top-0 left-0 w-full bg-white shadow-md rounded-b-md overflow-hidden z-50">
+              <nav className="px-4 py-3 flex flex-col space-y-2">
+                <Link
+                  to="/"
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/routes"
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Routes
+                </Link>
+                <Link
+                  to="/about"
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  About
+                </Link>
+                <Link
+                  to="/contact"
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Contact
+                </Link>
+                <Link
+                  to="/help"
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Help
+                </Link>
+              </nav>
+
+              {/* Add Profile link to mobile menu */}
+              <div className="pt-4 pb-3 border-t border-gray-200">
+                <Link
+                  to="/profile"
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Profile
+                </Link>
+                <Link
+                  to="/login"
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Register
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
-  );
-};
-
-const NavLinks = () => (
-  <ul className="flex items-center gap-6">
-    <NavLink to="/" label="Home" />
-    <NavLink to="/routes" label="Routes" />
-    <NavLink to="/about" label="About" />
-    <NavLink to="/help" label="Help" />
-  </ul>
-);
-
-const MobileNavLinks = () => (
-  <ul className="flex flex-col gap-6 text-lg">
-    <NavLink to="/" label="Home" mobile />
-    <NavLink to="/routes" label="Routes" mobile />
-    <NavLink to="/about" label="About" mobile />
-    <NavLink to="/help" label="Help" mobile />
-    <NavLink to="/contact" label="Contact" mobile />
-  </ul>
-);
-
-type NavLinkProps = {
-  to: string;
-  label: string;
-  mobile?: boolean;
-};
-
-const NavLink = ({ to, label, mobile }: NavLinkProps) => {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-  
-  return (
-    <li>
-      <Link 
-        to={to} 
-        className={cn(
-          "transition-colors duration-200",
-          isActive 
-            ? "text-primary font-medium" 
-            : "text-foreground/80 hover:text-primary",
-          mobile && "block py-2"
-        )}
-      >
-        {label}
-      </Link>
-    </li>
   );
 };
 

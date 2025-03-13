@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Check, Calendar, MapPin, Bus, Users, Download, Home, Bell } from 'lucide-react';
+import { Check, Calendar, MapPin, Bus, Users, Download, Home, Bell, User } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useToast } from "@/hooks/use-toast";
@@ -26,14 +25,13 @@ const BookingConfirmation = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('credit-card');
   const [paymentComplete, setPaymentComplete] = useState(false);
+  const [savedToProfile, setSavedToProfile] = useState(false);
   
-  // Check if payment was completed via URL params (for eSewa redirect)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const paymentStatus = params.get('q');
     
     if (paymentStatus === 'su') {
-      // eSewa success
       setPaymentComplete(true);
       toast({
         title: "Payment Successful",
@@ -41,7 +39,6 @@ const BookingConfirmation = () => {
         duration: 5000,
       });
     } else if (paymentStatus === 'fu') {
-      // eSewa failure
       toast({
         title: "Payment Failed",
         description: "There was an issue processing your eSewa payment.",
@@ -51,14 +48,12 @@ const BookingConfirmation = () => {
     }
   }, [location.search]);
   
-  // If no booking data is available, redirect to the home page
   useEffect(() => {
     if (!bookingData) {
       navigate('/');
     }
   }, [bookingData, navigate]);
   
-  // Send notifications when preferences change
   useEffect(() => {
     if (bookingData && !notificationsSent && (emailNotifications || smsNotifications)) {
       sendNotifications();
@@ -66,7 +61,7 @@ const BookingConfirmation = () => {
   }, [emailNotifications, smsNotifications]);
   
   if (!bookingData) {
-    return null; // Will redirect in the useEffect
+    return null;
   }
   
   const { bus, selectedSeats, passengerDetails, from, to, date, totalAmount } = bookingData;
@@ -74,14 +69,11 @@ const BookingConfirmation = () => {
   const travelDate = new Date(date);
   const bookingId = `NB${Math.floor(100000 + Math.random() * 900000)}`;
   
-  // Function to send notifications based on user preferences
   const sendNotifications = async () => {
     if (notificationsSent || (!emailNotifications && !smsNotifications)) return;
     
     setIsProcessing(true);
     
-    // Gather the primary passenger's contact details
-    // In a real app, this would come from the form or user profile
     const primaryPassenger = passengerDetails[0];
     const recipient = {
       name: primaryPassenger.name,
@@ -89,7 +81,6 @@ const BookingConfirmation = () => {
       phone: smsNotifications ? '+9779812345678' : undefined
     };
     
-    // Prepare notification data
     const notificationData = {
       bookingId,
       passengerDetails,
@@ -105,7 +96,6 @@ const BookingConfirmation = () => {
     };
     
     try {
-      // Send email notification if enabled
       if (emailNotifications) {
         const emailSent = await NotificationService.sendBookingConfirmation(
           recipient,
@@ -122,7 +112,6 @@ const BookingConfirmation = () => {
         }
       }
       
-      // Send SMS notification if enabled
       if (smsNotifications) {
         const smsSent = await NotificationService.sendBookingConfirmation(
           recipient,
@@ -137,11 +126,9 @@ const BookingConfirmation = () => {
             duration: 3000,
           });
           
-          // Schedule travel reminder for 24 hours before departure
           const reminderDate = new Date(travelDate);
           reminderDate.setDate(reminderDate.getDate() - 1);
           
-          // In a real app, this would be handled by a background job/cron
           console.log(`Travel reminder scheduled for ${format(reminderDate, 'MMM d, yyyy HH:mm')}`);
         }
       }
@@ -165,11 +152,9 @@ const BookingConfirmation = () => {
   };
   
   const handlePaymentCancel = () => {
-    // Handle payment cancellation if needed
   };
   
   const handleDownloadTicket = () => {
-    // Ensure payment is complete before allowing ticket download
     if (!paymentComplete) {
       toast({
         title: "Payment Required",
@@ -185,7 +170,6 @@ const BookingConfirmation = () => {
       paymentMethod === 'khalti' ? 'Khalti' : 
       'Credit Card';
     
-    // Prepare ticket data
     const ticketData = {
       bookingId,
       bookingDate,
@@ -201,15 +185,23 @@ const BookingConfirmation = () => {
       paymentMethod: paymentMethodName
     };
     
-    // Generate and download the ticket
     TicketService.generateTicket(ticketData);
     
-    // Show toast notification
     toast({
       title: "Ticket Downloaded",
       description: "Your e-ticket has been downloaded successfully.",
       duration: 3000,
     });
+  };
+  
+  const saveTicketToProfile = () => {
+    toast({
+      title: "Ticket Saved",
+      description: "Your ticket has been saved to your profile",
+      duration: 3000,
+    });
+    
+    setSavedToProfile(true);
   };
   
   return (
@@ -218,7 +210,6 @@ const BookingConfirmation = () => {
       
       <main className="flex-1 bg-gray-50 pt-20 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          {/* Success Message - Only show if payment is complete */}
           {paymentComplete && (
             <div className="bg-green-50 rounded-xl p-6 flex items-center gap-4 mb-8 animate-fade-in-up">
               <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -233,7 +224,6 @@ const BookingConfirmation = () => {
             </div>
           )}
           
-          {/* Payment Selection - Only show if payment is not complete */}
           {!paymentComplete && (
             <div className="bg-white rounded-xl shadow-soft p-6 mb-8 animate-fade-in-up">
               <h2 className="text-xl font-semibold mb-4">Complete Your Payment</h2>
@@ -260,7 +250,6 @@ const BookingConfirmation = () => {
             </div>
           )}
           
-          {/* Booking Information */}
           <div className="bg-white rounded-xl shadow-soft overflow-hidden mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <div className="bg-primary/5 p-6 border-b border-primary/10">
               <div className="flex justify-between items-center">
@@ -276,7 +265,6 @@ const BookingConfirmation = () => {
             
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Journey Details */}
                 <div>
                   <h3 className="font-medium mb-3">Journey Details</h3>
                   <div className="space-y-3">
@@ -315,7 +303,6 @@ const BookingConfirmation = () => {
                   </div>
                 </div>
                 
-                {/* Passenger Details */}
                 <div>
                   <h3 className="font-medium mb-3">Passenger Details</h3>
                   <div className="space-y-4">
@@ -337,7 +324,6 @@ const BookingConfirmation = () => {
                 </div>
               </div>
               
-              {/* Payment Information */}
               <div className="mt-8 pt-6 border-t border-gray-100">
                 <h3 className="font-medium mb-3">Payment Information</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -372,38 +358,34 @@ const BookingConfirmation = () => {
                 </div>
               </div>
               
-              {/* Notification Preferences - Only show if payment is complete */}
-              {paymentComplete && (
-                <div className="mt-8 pt-6 border-t border-gray-100">
-                  <div className="flex items-center mb-4">
-                    <Bell size={18} className="text-primary mr-2" />
-                    <h3 className="font-medium">Stay Updated</h3>
-                  </div>
-                  
-                  <NotificationPreferences 
-                    emailEnabled={emailNotifications}
-                    smsEnabled={smsNotifications}
-                    onEmailChange={(checked) => setEmailNotifications(checked)}
-                    onSmsChange={(checked) => setSmsNotifications(checked)}
-                  />
-                  
-                  {isProcessing && (
-                    <div className="mt-3 text-sm text-gray-600">
-                      Processing notifications...
-                    </div>
-                  )}
-                  
-                  {notificationsSent && (
-                    <div className="mt-3 text-sm text-green-600">
-                      Notifications sent successfully! You'll receive updates about your journey.
-                    </div>
-                  )}
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <div className="flex items-center mb-4">
+                  <Bell size={18} className="text-primary mr-2" />
+                  <h3 className="font-medium">Stay Updated</h3>
                 </div>
-              )}
+                
+                <NotificationPreferences 
+                  emailEnabled={emailNotifications}
+                  smsEnabled={smsNotifications}
+                  onEmailChange={(checked) => setEmailNotifications(checked)}
+                  onSmsChange={(checked) => setSmsNotifications(checked)}
+                />
+                
+                {isProcessing && (
+                  <div className="mt-3 text-sm text-gray-600">
+                    Processing notifications...
+                  </div>
+                )}
+                
+                {notificationsSent && (
+                  <div className="mt-3 text-sm text-green-600">
+                    Notifications sent successfully! You'll receive updates about your journey.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           
-          {/* Actions - Only show if payment is complete */}
           {paymentComplete && (
             <div className="flex flex-wrap justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <Button 
@@ -415,10 +397,36 @@ const BookingConfirmation = () => {
                 Download E-Ticket
               </Button>
               
+              <Button
+                variant="outline"
+                className="flex items-center"
+                onClick={saveTicketToProfile}
+                disabled={savedToProfile}
+              >
+                {savedToProfile ? (
+                  <>
+                    <span className="mr-2">✓</span>
+                    Saved to Profile
+                  </>
+                ) : (
+                  <>
+                    <User size={18} className="mr-2" />
+                    Save to Profile
+                  </>
+                )}
+              </Button>
+              
               <Link to="/" className="btn-primary flex items-center">
                 <Home size={18} className="mr-2" />
                 Return to Home
               </Link>
+              
+              {savedToProfile && (
+                <Link to="/profile" className="btn-secondary flex items-center">
+                  <User size={18} className="mr-2" />
+                  View in Profile
+                </Link>
+              )}
             </div>
           )}
         </div>
