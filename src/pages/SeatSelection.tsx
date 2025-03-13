@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Users, CreditCard } from 'lucide-react';
@@ -123,41 +122,6 @@ const SeatSelection = () => {
     setPassengerDetails(updatedDetails);
   };
 
-  const downloadTicket = () => {
-    if (!bus) return;
-    
-    // Generate a random booking ID
-    const bookingId = `TKT${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
-    
-    // Prepare passenger details
-    const formattedPassengerDetails = passengerDetails.map(passenger => ({
-      name: passenger.name,
-      age: parseInt(passenger.age) || 0,
-      gender: passenger.gender,
-      seat: passenger.seat
-    }));
-    
-    // Create ticket data
-    const ticketData: TicketData = {
-      bookingId,
-      bookingDate: new Date(),
-      travelDate: date,
-      from,
-      to,
-      busName: bus.busName,
-      busType: bus.busType,
-      departureTime: bus.departureTime,
-      arrivalTime: bus.arrivalTime,
-      passengerDetails: formattedPassengerDetails,
-      totalAmount: bus.price * selectedSeats.length,
-      paymentMethod: 'Credit Card' // Default payment method
-    };
-    
-    // Generate the ticket PDF
-    TicketService.generateTicket(ticketData);
-    toast.success("E-ticket downloaded successfully!");
-  };
-  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -170,9 +134,6 @@ const SeatSelection = () => {
       toast.error("Please complete all passenger details");
       return;
     }
-    
-    // Download the ticket
-    downloadTicket();
     
     // Here we would normally validate and process the booking
     // For demo, we'll just navigate to a confirmation page
@@ -388,14 +349,6 @@ const SeatSelection = () => {
                     Proceed to Payment
                   </button>
                   
-                  <button 
-                    type="button"
-                    onClick={downloadTicket}
-                    className="btn-secondary w-full py-3 flex items-center justify-center"
-                    disabled={selectedSeats.length === 0}
-                  >
-                    Download E-Ticket
-                  </button>
                   
                   <p className="text-xs text-gray-500 text-center">
                     By proceeding, you agree to our terms and conditions and cancellation policy.

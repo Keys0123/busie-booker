@@ -169,6 +169,17 @@ const BookingConfirmation = () => {
   };
   
   const handleDownloadTicket = () => {
+    // Ensure payment is complete before allowing ticket download
+    if (!paymentComplete) {
+      toast({
+        title: "Payment Required",
+        description: "Please complete your payment before downloading the e-ticket.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+    
     const paymentMethodName = 
       paymentMethod === 'esewa' ? 'eSewa' : 
       paymentMethod === 'khalti' ? 'Khalti' : 
