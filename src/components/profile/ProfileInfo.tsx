@@ -40,13 +40,25 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
   const [phone, setPhone] = useState(userData.phone);
   const [userStatus, setUserStatus] = useState<'Active' | 'Inactive'>(userData.status || 'Active');
 
+  // Update form fields when userData changes
+  useEffect(() => {
+    setName(userData.name);
+    setEmail(userData.email);
+    setPhone(userData.phone);
+    setUserStatus(userData.status || 'Active');
+  }, [userData]);
+
   // Sync with admin panel changes via localStorage
   useEffect(() => {
     const checkAdminChanges = () => {
+      const currentUserEmail = localStorage.getItem('currentUserEmail');
+      
+      if (!currentUserEmail) return;
+      
       const adminUsers = localStorage.getItem('adminUsers');
       if (adminUsers) {
         const parsedUsers = JSON.parse(adminUsers);
-        const currentUser = parsedUsers.find((user: any) => user.id === userData.id);
+        const currentUser = parsedUsers.find((user: any) => user.email === currentUserEmail);
         
         if (currentUser) {
           if (currentUser.status !== userStatus) {
@@ -75,7 +87,7 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
     const interval = setInterval(checkAdminChanges, 5000);
     
     return () => clearInterval(interval);
-  }, [userData.id, userStatus, onUserUpdate, userData]);
+  }, [userData, userStatus, onUserUpdate]);
   
   const handleSave = () => {
     // Update user data

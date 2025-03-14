@@ -9,6 +9,55 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
+// Sample user data for demo purposes
+const userAccounts = [
+  {
+    email: "rajesh.sharma@example.com",
+    password: "password123",
+    profile: {
+      id: "usr123456",
+      name: "Rajesh Sharma",
+      email: "rajesh.sharma@example.com",
+      phone: "+977-9801234567",
+      profileImage: "",
+      memberSince: "2023-01-15",
+      totalTrips: 8,
+      preferredRoutes: ["Kathmandu-Pokhara", "Kathmandu-Chitwan"],
+      status: "Active"
+    }
+  },
+  {
+    email: "john.doe@example.com",
+    password: "password123",
+    profile: {
+      id: "usr789012",
+      name: "John Doe",
+      email: "john.doe@example.com",
+      phone: "+977-9809876543",
+      profileImage: "",
+      memberSince: "2023-03-20",
+      totalTrips: 3,
+      preferredRoutes: ["Kathmandu-Lumbini", "Pokhara-Chitwan"],
+      status: "Active"
+    }
+  },
+  {
+    email: "sarah.smith@example.com",
+    password: "password123",
+    profile: {
+      id: "usr345678",
+      name: "Sarah Smith",
+      email: "sarah.smith@example.com",
+      phone: "+977-9807654321",
+      profileImage: "",
+      memberSince: "2023-06-10",
+      totalTrips: 5,
+      preferredRoutes: ["Kathmandu-Nagarkot", "Pokhara-Jomsom"],
+      status: "Active"
+    }
+  }
+];
+
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -35,13 +84,63 @@ const Login = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // For demo, we'll just redirect with a success message
-      toast({
-        title: "Success",
-        description: "You have successfully logged in",
-      });
+      // For demo, find the user in our sample accounts
+      const user = userAccounts.find(u => u.email.toLowerCase() === email.toLowerCase());
       
-      navigate('/');
+      if (user && user.password === password) {
+        // Store the user's profile info
+        localStorage.setItem('profileUser', JSON.stringify(user.profile));
+        localStorage.setItem('currentUserEmail', email);
+        
+        // Update admin users list if needed
+        const adminUsers = localStorage.getItem('adminUsers');
+        if (adminUsers) {
+          const parsedUsers = JSON.parse(adminUsers);
+          // Check if user exists in admin list
+          const existingUserIndex = parsedUsers.findIndex((u: any) => u.id === user.profile.id);
+          
+          if (existingUserIndex >= 0) {
+            // Update lastLogin
+            parsedUsers[existingUserIndex].lastLogin = new Date().toISOString().split('T')[0];
+            localStorage.setItem('adminUsers', JSON.stringify(parsedUsers));
+          } else {
+            // Add user to admin list
+            parsedUsers.push({
+              id: user.profile.id,
+              name: user.profile.name,
+              email: user.profile.email,
+              phone: user.profile.phone,
+              bookings: user.profile.totalTrips,
+              joined: user.profile.memberSince,
+              status: user.profile.status || 'Active',
+              lastLogin: new Date().toISOString().split('T')[0]
+            });
+            localStorage.setItem('adminUsers', JSON.stringify(parsedUsers));
+          }
+        } else {
+          // Create admin users list if it doesn't exist
+          const newAdminUsers = [{
+            id: user.profile.id,
+            name: user.profile.name,
+            email: user.profile.email,
+            phone: user.profile.phone,
+            bookings: user.profile.totalTrips,
+            joined: user.profile.memberSince,
+            status: user.profile.status || 'Active',
+            lastLogin: new Date().toISOString().split('T')[0]
+          }];
+          localStorage.setItem('adminUsers', JSON.stringify(newAdminUsers));
+        }
+        
+        toast({
+          title: "Success",
+          description: "You have successfully logged in",
+        });
+        
+        navigate('/profile');
+      } else {
+        throw new Error('Invalid credentials');
+      }
     } catch (error) {
       toast({
         title: "Login Failed",

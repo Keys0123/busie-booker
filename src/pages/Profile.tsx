@@ -39,33 +39,40 @@ const Profile = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   
   useEffect(() => {
-    // Get user data from localStorage (which would be set during login in a real app)
+    // Get user data from localStorage (which is set during login)
     const savedUser = localStorage.getItem('profileUser');
+    const currentUserEmail = localStorage.getItem('currentUserEmail');
     
     if (savedUser) {
       setUserData(JSON.parse(savedUser));
-    } else {
-      // If no user in localStorage, save the default one
-      localStorage.setItem('profileUser', JSON.stringify(defaultUserData));
+    } else if (!currentUserEmail) {
+      // If no saved user and no currentUserEmail, redirect to login
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to view your profile",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
     }
     
     // Check if this user exists in admin users list
     const adminUsers = localStorage.getItem('adminUsers');
-    if (adminUsers) {
+    if (adminUsers && currentUserEmail) {
       const parsedUsers = JSON.parse(adminUsers);
-      const userExists = parsedUsers.some((user: any) => user.id === (savedUser ? JSON.parse(savedUser).id : defaultUserData.id));
+      const userExists = parsedUsers.some((user: any) => user.email === currentUserEmail);
       
-      if (!userExists) {
+      if (!userExists && savedUser) {
         // Add this user to admin users list if not present
-        const userToAdd = savedUser ? JSON.parse(savedUser) : defaultUserData;
+        const userProfile = JSON.parse(savedUser);
         parsedUsers.push({
-          id: userToAdd.id,
-          name: userToAdd.name,
-          email: userToAdd.email,
-          phone: userToAdd.phone,
-          bookings: userToAdd.totalTrips,
-          joined: userToAdd.memberSince,
-          status: userToAdd.status || 'Active',
+          id: userProfile.id,
+          name: userProfile.name,
+          email: userProfile.email,
+          phone: userProfile.phone,
+          bookings: userProfile.totalTrips,
+          joined: userProfile.memberSince,
+          status: userProfile.status || 'Active',
           lastLogin: new Date().toISOString().split('T')[0]
         });
         
@@ -78,15 +85,17 @@ const Profile = () => {
     if (!isLoggedIn) {
       navigate('/login');
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, toast]);
   
   const handleLogout = () => {
     // In a real app, this would handle proper logout
+    localStorage.removeItem('currentUserEmail');
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out",
     });
     setIsLoggedIn(false);
+    navigate('/login');
   };
 
   const handleUserUpdate = (updatedUser: any) => {
