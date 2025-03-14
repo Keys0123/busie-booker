@@ -25,7 +25,8 @@ const userData = {
   profileImage: "",
   memberSince: "2023-01-15",
   totalTrips: 8,
-  preferredRoutes: ["Kathmandu-Pokhara", "Kathmandu-Chitwan"]
+  preferredRoutes: ["Kathmandu-Pokhara", "Kathmandu-Chitwan"],
+  status: "Active" as 'Active' | 'Inactive' // Added status
 };
 
 const Profile = () => {
@@ -78,9 +79,13 @@ const Profile = () => {
                     <h2 className="text-xl font-bold">{userData.name}</h2>
                     <p className="text-gray-500 text-sm mt-1">Member since {format(new Date(userData.memberSince), 'MMM yyyy')}</p>
                     
-                    <div className="mt-2">
+                    <div className="mt-2 space-y-2">
                       <Badge variant="outline" className="bg-primary/5 text-primary">
                         {userData.totalTrips} Trips
+                      </Badge>
+                      
+                      <Badge variant={userData.status === 'Active' ? 'default' : 'secondary'} className="ml-2">
+                        {userData.status}
                       </Badge>
                     </div>
                   </div>

@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, ArrowUpDown, Edit, Trash, Plus, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Sample user data
+// Sample user data - In a real app, this would come from an API or database
 const initialUsers = [
   { 
     id: '2345',
@@ -59,12 +61,25 @@ const initialUsers = [
     status: 'Active',
     lastLogin: '2023-05-11'
   },
+  // Added Rajesh Sharma from the Profile component for consistency
+  { 
+    id: 'usr123456',
+    name: 'Rajesh Sharma',
+    email: 'rajesh.sharma@example.com',
+    phone: '+977-9801234567',
+    bookings: 8,
+    joined: '2023-01-15',
+    status: 'Active',
+    lastLogin: '2023-05-12'
+  },
 ];
 
 const AdminUsers = () => {
   const [users, setUsers] = useState(initialUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedUser, setSelectedUser] = useState<typeof initialUsers[0] | null>(null);
+  const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
   
   // Filter users based on search term and status
   const filteredUsers = users.filter(user => {
@@ -79,10 +94,11 @@ const AdminUsers = () => {
   });
   
   const handleViewUser = (userId: string) => {
-    toast({
-      title: "View User",
-      description: `Viewing details for user ID: ${userId}`,
-    });
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setSelectedUser(user);
+      setIsUserDetailsOpen(true);
+    }
   };
   
   const handleEditUser = (userId: string) => {
@@ -122,6 +138,21 @@ const AdminUsers = () => {
         ? prev.filter(s => s !== status)
         : [...prev, status]
     );
+  };
+
+  const handleStatusToggle = (userId: string) => {
+    setUsers(users.map(user => {
+      if (user.id === userId) {
+        const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
+        return { ...user, status: newStatus };
+      }
+      return user;
+    }));
+
+    toast({
+      title: "Status Updated",
+      description: "User status has been updated successfully",
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -232,9 +263,15 @@ const AdminUsers = () => {
                     <td className="p-4">{user.joined}</td>
                     <td className="p-4">{user.lastLogin}</td>
                     <td className="p-4">
-                      <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(user.status)}`}>
-                        {user.status}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span 
+                          className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(user.status)} cursor-pointer`}
+                          onClick={() => handleStatusToggle(user.id)}
+                          title={`Click to change status to ${user.status === 'Active' ? 'Inactive' : 'Active'}`}
+                        >
+                          {user.status}
+                        </span>
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="flex space-x-2">
@@ -276,6 +313,88 @@ const AdminUsers = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* User Details Dialog */}
+      <Dialog open={isUserDetailsOpen} onOpenChange={setIsUserDetailsOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh]">
+            {selectedUser && (
+              <div className="space-y-4 py-2">
+                <div className="flex justify-center">
+                  <div className="h-24 w-24 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xl font-bold">
+                    {selectedUser.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-medium text-gray-500">Name</h3>
+                    <p>{selectedUser.name}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-500">Email</h3>
+                    <p>{selectedUser.email}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-500">Phone</h3>
+                    <p>{selectedUser.phone}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-500">User ID</h3>
+                    <p>#{selectedUser.id}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-500">Status</h3>
+                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(selectedUser.status)}`}>
+                      {selectedUser.status}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-500">Joined</h3>
+                    <p>{selectedUser.joined}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-500">Last Login</h3>
+                    <p>{selectedUser.lastLogin}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-500">Total Bookings</h3>
+                    <p>{selectedUser.bookings}</p>
+                  </div>
+                </div>
+                
+                <div className="pt-4 flex space-x-2 justify-end border-t">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsUserDetailsOpen(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button 
+                    variant="destructive"
+                    onClick={() => {
+                      handleDeleteUser(selectedUser.id);
+                      setIsUserDetailsOpen(false);
+                    }}
+                  >
+                    Delete User
+                  </Button>
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

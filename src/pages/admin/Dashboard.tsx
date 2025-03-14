@@ -7,12 +7,53 @@ import {
   Route, 
   TrendingUp, 
   ArrowUpRight, 
-  ArrowDownRight 
+  ArrowDownRight,
+  UserPlus
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+// User data - This should match with the Users.tsx file
+const usersData = [
+  { id: 'usr123456', name: 'Rajesh Sharma', email: 'rajesh.sharma@example.com', joined: 'May 15, 2023', bookings: 8 },
+  { id: '2345', name: 'Dipika Karki', email: 'dipika@example.com', joined: 'May 12, 2023', bookings: 3 },
+  { id: '2346', name: 'Sunil Thapa', email: 'sunil@example.com', joined: 'May 11, 2023', bookings: 1 },
+  { id: '2347', name: 'Ravi Shrestha', email: 'ravi@example.com', joined: 'May 10, 2023', bookings: 2 },
+  { id: '2348', name: 'Sabina Gurung', email: 'sabina@example.com', joined: 'May 9, 2023', bookings: 0 },
+  { id: '2349', name: 'Nabin Magar', email: 'nabin@example.com', joined: 'May 8, 2023', bookings: 5 },
+];
+
+// Sample data for bookings
+const bookingsData = [
+  { id: '8721', route: 'Kathmandu - Pokhara', customer: 'Raj Sharma', date: 'May 12, 2023', amount: '45.00', status: 'Completed' },
+  { id: '8722', route: 'Pokhara - Chitwan', customer: 'Anu Thapa', date: 'May 12, 2023', amount: '32.50', status: 'Pending' },
+  { id: '8723', route: 'Kathmandu - Chitwan', customer: 'Kiran KC', date: 'May 11, 2023', amount: '38.00', status: 'Completed' },
+  { id: '8724', route: 'Bhaktapur - Patan', customer: 'Sita Rai', date: 'May 11, 2023', amount: '15.00', status: 'Cancelled' },
+  { id: '8725', route: 'Kathmandu - Lumbini', customer: 'Binod Tamang', date: 'May 10, 2023', amount: '55.00', status: 'Completed' },
+];
+
+// Sample data for routes and monthly bookings
+const routeData = [
+  { name: 'Kathmandu - Pokhara', revenue: 12500 },
+  { name: 'Kathmandu - Chitwan', revenue: 9800 },
+  { name: 'Pokhara - Lumbini', revenue: 7600 },
+  { name: 'Bhaktapur - Patan', revenue: 4500 },
+  { name: 'Kathmandu - Janakpur', revenue: 3200 },
+];
+
+const monthlyData = [
+  { name: 'January', bookings: 3200 },
+  { name: 'February', bookings: 3600 },
+  { name: 'March', bookings: 4100 },
+  { name: 'April', bookings: 4500 },
+  { name: 'May', bookings: 3900 },
+  { name: 'June', bookings: 4300 },
+];
+
 const AdminDashboard = () => {
+  // Calculate new users in the last month (for demonstration)
+  const newUsersCount = usersData.length;
+  
   return (
     <div className="space-y-6">
       <div>
@@ -50,8 +91,8 @@ const AdminDashboard = () => {
         
         <StatsCard 
           title="Registered Users" 
-          value="2,345" 
-          description="↗︎ 289 new users" 
+          value={newUsersCount.toString()} 
+          description="↗︎ New users this month" 
           trend="up"
           icon={<Users className="h-8 w-8 text-primary" />} 
         />
@@ -102,7 +143,17 @@ const AdminDashboard = () => {
         </TabsContent>
         
         <TabsContent value="users" className="space-y-4">
-          <h2 className="text-xl font-semibold">New Users</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">New User Registrations</h2>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/admin/users'}
+              className="flex items-center gap-1"
+            >
+              <UserPlus size={16} />
+              <span>View All Users</span>
+            </Button>
+          </div>
           <Card>
             <CardContent className="p-0">
               <table className="w-full">
@@ -237,43 +288,13 @@ const getStatusColor = (status: string) => {
       return 'bg-yellow-100 text-yellow-800';
     case 'Cancelled':
       return 'bg-red-100 text-red-800';
+    case 'Active':
+      return 'bg-green-100 text-green-800';
+    case 'Inactive':
+      return 'bg-gray-100 text-gray-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
 };
-
-// Sample data
-const bookingsData = [
-  { id: '8721', route: 'Kathmandu - Pokhara', customer: 'Raj Sharma', date: 'May 12, 2023', amount: '45.00', status: 'Completed' },
-  { id: '8722', route: 'Pokhara - Chitwan', customer: 'Anu Thapa', date: 'May 12, 2023', amount: '32.50', status: 'Pending' },
-  { id: '8723', route: 'Kathmandu - Chitwan', customer: 'Kiran KC', date: 'May 11, 2023', amount: '38.00', status: 'Completed' },
-  { id: '8724', route: 'Bhaktapur - Patan', customer: 'Sita Rai', date: 'May 11, 2023', amount: '15.00', status: 'Cancelled' },
-  { id: '8725', route: 'Kathmandu - Lumbini', customer: 'Binod Tamang', date: 'May 10, 2023', amount: '55.00', status: 'Completed' },
-];
-
-const usersData = [
-  { id: '2345', name: 'Dipika Karki', email: 'dipika@example.com', joined: 'May 12, 2023', bookings: 3 },
-  { id: '2346', name: 'Sunil Thapa', email: 'sunil@example.com', joined: 'May 11, 2023', bookings: 1 },
-  { id: '2347', name: 'Ravi Shrestha', email: 'ravi@example.com', joined: 'May 10, 2023', bookings: 2 },
-  { id: '2348', name: 'Sabina Gurung', email: 'sabina@example.com', joined: 'May 9, 2023', bookings: 0 },
-  { id: '2349', name: 'Nabin Magar', email: 'nabin@example.com', joined: 'May 8, 2023', bookings: 5 },
-];
-
-const routeData = [
-  { name: 'Kathmandu - Pokhara', revenue: 12500 },
-  { name: 'Kathmandu - Chitwan', revenue: 9800 },
-  { name: 'Pokhara - Lumbini', revenue: 7600 },
-  { name: 'Bhaktapur - Patan', revenue: 4500 },
-  { name: 'Kathmandu - Janakpur', revenue: 3200 },
-];
-
-const monthlyData = [
-  { name: 'January', bookings: 3200 },
-  { name: 'February', bookings: 3600 },
-  { name: 'March', bookings: 4100 },
-  { name: 'April', bookings: 4500 },
-  { name: 'May', bookings: 3900 },
-  { name: 'June', bookings: 4300 },
-];
 
 export default AdminDashboard;
