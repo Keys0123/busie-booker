@@ -68,6 +68,38 @@ const Register = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Create a unique ID for the user
+      const userId = `usr${Date.now().toString().slice(-6)}`;
+      
+      // Create a new user account
+      const newUser = {
+        email: formData.email,
+        password: formData.password,
+        profile: {
+          id: userId,
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          profileImage: "",
+          memberSince: new Date().toISOString().split('T')[0],
+          totalTrips: 0,
+          preferredRoutes: [],
+          status: "Active"
+        }
+      };
+      
+      // Get existing user accounts or initialize empty array
+      const existingUsers = JSON.parse(localStorage.getItem('userAccounts') || '[]');
+      
+      // Check if email already exists
+      if (existingUsers.some((user: any) => user.email === formData.email)) {
+        throw new Error('Email already exists');
+      }
+      
+      // Add new user to accounts
+      existingUsers.push(newUser);
+      localStorage.setItem('userAccounts', JSON.stringify(existingUsers));
+      
       toast({
         title: "Registration successful",
         description: "Your account has been created successfully",
@@ -75,10 +107,10 @@ const Register = () => {
       
       // Redirect to login page
       navigate('/login');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: "There was a problem creating your account",
+        description: error.message || "There was a problem creating your account",
         variant: "destructive",
       });
     } finally {

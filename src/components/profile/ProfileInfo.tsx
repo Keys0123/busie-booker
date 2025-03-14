@@ -98,10 +98,7 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
       phone
     };
     
-    // In a real app, this would call an API to update the user's profile
-    setIsEditing(false);
-    
-    // Also update in the admin users list (localStorage)
+    // Update in the admin users list (localStorage)
     const adminUsers = localStorage.getItem('adminUsers');
     if (adminUsers) {
       const parsedUsers = JSON.parse(adminUsers);
@@ -114,10 +111,33 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
     // Save to profile user in localStorage
     localStorage.setItem('profileUser', JSON.stringify(updatedUser));
     
+    // Also update in userAccounts
+    const accounts = JSON.parse(localStorage.getItem('userAccounts') || '[]');
+    const updatedAccounts = accounts.map((account: any) => {
+      if (account.email === userData.email) {
+        const updatedAccount = {
+          ...account,
+          email: email, // Update email in the top-level object too
+          profile: {
+            ...account.profile,
+            name,
+            email,
+            phone
+          }
+        };
+        return updatedAccount;
+      }
+      return account;
+    });
+    localStorage.setItem('userAccounts', JSON.stringify(updatedAccounts));
+    
     // Call the onUserUpdate callback if provided
     if (onUserUpdate) {
       onUserUpdate(updatedUser);
     }
+    
+    // Complete editing
+    setIsEditing(false);
     
     toast({
       title: "Profile Updated",

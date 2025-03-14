@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -9,54 +9,65 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
-// Sample user data for demo purposes
-const userAccounts = [
-  {
-    email: "rajesh.sharma@example.com",
-    password: "password123",
-    profile: {
-      id: "usr123456",
-      name: "Rajesh Sharma",
-      email: "rajesh.sharma@example.com",
-      phone: "+977-9801234567",
-      profileImage: "",
-      memberSince: "2023-01-15",
-      totalTrips: 8,
-      preferredRoutes: ["Kathmandu-Pokhara", "Kathmandu-Chitwan"],
-      status: "Active"
-    }
-  },
-  {
-    email: "john.doe@example.com",
-    password: "password123",
-    profile: {
-      id: "usr789012",
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+977-9809876543",
-      profileImage: "",
-      memberSince: "2023-03-20",
-      totalTrips: 3,
-      preferredRoutes: ["Kathmandu-Lumbini", "Pokhara-Chitwan"],
-      status: "Active"
-    }
-  },
-  {
-    email: "sarah.smith@example.com",
-    password: "password123",
-    profile: {
-      id: "usr345678",
-      name: "Sarah Smith",
-      email: "sarah.smith@example.com",
-      phone: "+977-9807654321",
-      profileImage: "",
-      memberSince: "2023-06-10",
-      totalTrips: 5,
-      preferredRoutes: ["Kathmandu-Nagarkot", "Pokhara-Jomsom"],
-      status: "Active"
-    }
+// Initialize sample user data if none exists
+const initializeUserAccounts = () => {
+  const existingUsers = localStorage.getItem('userAccounts');
+  
+  if (!existingUsers) {
+    const sampleUsers = [
+      {
+        email: "rajesh.sharma@example.com",
+        password: "password123",
+        profile: {
+          id: "usr123456",
+          name: "Rajesh Sharma",
+          email: "rajesh.sharma@example.com",
+          phone: "+977-9801234567",
+          profileImage: "",
+          memberSince: "2023-01-15",
+          totalTrips: 8,
+          preferredRoutes: ["Kathmandu-Pokhara", "Kathmandu-Chitwan"],
+          status: "Active"
+        }
+      },
+      {
+        email: "john.doe@example.com",
+        password: "password123",
+        profile: {
+          id: "usr789012",
+          name: "John Doe",
+          email: "john.doe@example.com",
+          phone: "+977-9809876543",
+          profileImage: "",
+          memberSince: "2023-03-20",
+          totalTrips: 3,
+          preferredRoutes: ["Kathmandu-Lumbini", "Pokhara-Chitwan"],
+          status: "Active"
+        }
+      },
+      {
+        email: "sarah.smith@example.com",
+        password: "password123",
+        profile: {
+          id: "usr345678",
+          name: "Sarah Smith",
+          email: "sarah.smith@example.com",
+          phone: "+977-9807654321",
+          profileImage: "",
+          memberSince: "2023-06-10",
+          totalTrips: 5,
+          preferredRoutes: ["Kathmandu-Nagarkot", "Pokhara-Jomsom"],
+          status: "Active"
+        }
+      }
+    ];
+    
+    localStorage.setItem('userAccounts', JSON.stringify(sampleUsers));
+    return sampleUsers;
   }
-];
+  
+  return JSON.parse(existingUsers);
+};
 
 const Login = () => {
   const navigate = useNavigate();
@@ -64,6 +75,13 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [userAccounts, setUserAccounts] = useState<any[]>([]);
+  
+  useEffect(() => {
+    // Initialize user accounts from localStorage
+    const accounts = initializeUserAccounts();
+    setUserAccounts(accounts);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,10 +102,16 @@ const Login = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // For demo, find the user in our sample accounts
-      const user = userAccounts.find(u => u.email.toLowerCase() === email.toLowerCase());
+      // Get latest user accounts (in case they were updated)
+      const latestAccounts = JSON.parse(localStorage.getItem('userAccounts') || '[]');
+      
+      // Find the user in our accounts
+      const user = latestAccounts.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
       
       if (user && user.password === password) {
+        // Clear any existing profile data
+        localStorage.removeItem('profileUser');
+        
         // Store the user's profile info
         localStorage.setItem('profileUser', JSON.stringify(user.profile));
         localStorage.setItem('currentUserEmail', email);
@@ -97,7 +121,7 @@ const Login = () => {
         if (adminUsers) {
           const parsedUsers = JSON.parse(adminUsers);
           // Check if user exists in admin list
-          const existingUserIndex = parsedUsers.findIndex((u: any) => u.id === user.profile.id);
+          const existingUserIndex = parsedUsers.findIndex((u: any) => u.email === user.profile.email);
           
           if (existingUserIndex >= 0) {
             // Update lastLogin

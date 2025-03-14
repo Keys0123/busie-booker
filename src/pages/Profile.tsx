@@ -16,16 +16,16 @@ import TravelHistory from '@/components/profile/TravelHistory';
 import SavedTickets from '@/components/profile/SavedTickets';
 import { useToast } from '@/hooks/use-toast';
 
-// Default user data
+// Default user data as fallback
 const defaultUserData = {
   id: "usr123456",
-  name: "Rajesh Sharma",
-  email: "rajesh.sharma@example.com",
-  phone: "+977-9801234567",
+  name: "Guest User",
+  email: "guest@example.com",
+  phone: "+977-9800000000",
   profileImage: "",
-  memberSince: "2023-01-15",
-  totalTrips: 8,
-  preferredRoutes: ["Kathmandu-Pokhara", "Kathmandu-Chitwan"],
+  memberSince: new Date().toISOString().split('T')[0],
+  totalTrips: 0,
+  preferredRoutes: [],
   status: "Active" as 'Active' | 'Inactive'
 };
 
@@ -35,18 +35,15 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("info");
   const [userData, setUserData] = useState(defaultUserData);
   
-  // Check if user is logged in - in a real app this would use authentication
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  // Check if user is logged in
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   useEffect(() => {
-    // Get user data from localStorage (which is set during login)
-    const savedUser = localStorage.getItem('profileUser');
+    // Check for active user session
     const currentUserEmail = localStorage.getItem('currentUserEmail');
     
-    if (savedUser) {
-      setUserData(JSON.parse(savedUser));
-    } else if (!currentUserEmail) {
-      // If no saved user and no currentUserEmail, redirect to login
+    if (!currentUserEmail) {
+      // No logged in user, redirect to login
       toast({
         title: "Authentication Required",
         description: "Please log in to view your profile",
@@ -56,15 +53,45 @@ const Profile = () => {
       return;
     }
     
-    // Check if this user exists in admin users list
+    // Get user data from localStorage
+    const savedUserProfile = localStorage.getItem('profileUser');
+    
+    if (savedUserProfile) {
+      // Parse and use the saved profile data
+      const profileData = JSON.parse(savedUserProfile);
+      setUserData(profileData);
+      setIsLoggedIn(true);
+    } else {
+      // If we have an email but no profile, try to find the user in accounts
+      const accounts = JSON.parse(localStorage.getItem('userAccounts') || '[]');
+      const currentUser = accounts.find((user: any) => user.email === currentUserEmail);
+      
+      if (currentUser) {
+        // Found the user, set their profile data
+        setUserData(currentUser.profile);
+        localStorage.setItem('profileUser', JSON.stringify(currentUser.profile));
+        setIsLoggedIn(true);
+      } else {
+        // No user found, redirect to login
+        toast({
+          title: "Session Expired",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        localStorage.removeItem('currentUserEmail');
+        navigate('/login');
+      }
+    }
+    
+    // Check if user exists in admin users list and update if needed
     const adminUsers = localStorage.getItem('adminUsers');
     if (adminUsers && currentUserEmail) {
       const parsedUsers = JSON.parse(adminUsers);
       const userExists = parsedUsers.some((user: any) => user.email === currentUserEmail);
       
-      if (!userExists && savedUser) {
+      if (!userExists && savedUserProfile) {
         // Add this user to admin users list if not present
-        const userProfile = JSON.parse(savedUser);
+        const userProfile = JSON.parse(savedUserProfile);
         parsedUsers.push({
           id: userProfile.id,
           name: userProfile.name,
@@ -79,17 +106,12 @@ const Profile = () => {
         localStorage.setItem('adminUsers', JSON.stringify(parsedUsers));
       }
     }
-
-    // In a real app, you would check authentication status here
-    // If not logged in, redirect to login page
-    if (!isLoggedIn) {
-      navigate('/login');
-    }
-  }, [isLoggedIn, navigate, toast]);
+  }, [navigate, toast]);
   
   const handleLogout = () => {
-    // In a real app, this would handle proper logout
+    // Handle logout
     localStorage.removeItem('currentUserEmail');
+    localStorage.removeItem('profileUser');
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out",
@@ -101,6 +123,16 @@ const Profile = () => {
   const handleUserUpdate = (updatedUser: any) => {
     setUserData(updatedUser);
     localStorage.setItem('profileUser', JSON.stringify(updatedUser));
+    
+    // Also update in userAccounts
+    const accounts = JSON.parse(localStorage.getItem('userAccounts') || '[]');
+    const updatedAccounts = accounts.map((account: any) => {
+      if (account.email === updatedUser.email) {
+        return { ...account, profile: updatedUser };
+      }
+      return account;
+    });
+    localStorage.setItem('userAccounts', JSON.stringify(updatedAccounts));
   };
   
   if (!isLoggedIn) return null;
