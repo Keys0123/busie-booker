@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -10,10 +10,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, Save, X } from 'lucide-react';
+import { Edit, Save, X, AlertTriangle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type UserData = {
   id: string;
@@ -29,17 +30,82 @@ type UserData = {
 
 type ProfileInfoProps = {
   userData: UserData;
+  onUserUpdate?: (updatedUser: UserData) => void;
 };
 
-const ProfileInfo = ({ userData }: ProfileInfoProps) => {
+const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(userData.name);
   const [email, setEmail] = useState(userData.email);
   const [phone, setPhone] = useState(userData.phone);
+  const [userStatus, setUserStatus] = useState<'Active' | 'Inactive'>(userData.status || 'Active');
+
+  // Sync with admin panel changes via localStorage
+  useEffect(() => {
+    const checkAdminChanges = () => {
+      const adminUsers = localStorage.getItem('adminUsers');
+      if (adminUsers) {
+        const parsedUsers = JSON.parse(adminUsers);
+        const currentUser = parsedUsers.find((user: any) => user.id === userData.id);
+        
+        if (currentUser) {
+          if (currentUser.status !== userStatus) {
+            setUserStatus(currentUser.status);
+            if (onUserUpdate) {
+              onUserUpdate({
+                ...userData,
+                status: currentUser.status
+              });
+            }
+          }
+        } else {
+          // User was deleted by admin
+          toast({
+            title: "Account Deleted",
+            description: "Your account has been deleted by an administrator.",
+            variant: "destructive",
+          });
+          // In a real app, you would redirect to logout here
+        }
+      }
+    };
+
+    // Check immediately and set up interval
+    checkAdminChanges();
+    const interval = setInterval(checkAdminChanges, 5000);
+    
+    return () => clearInterval(interval);
+  }, [userData.id, userStatus, onUserUpdate, userData]);
   
   const handleSave = () => {
+    // Update user data
+    const updatedUser = {
+      ...userData,
+      name,
+      email,
+      phone
+    };
+    
     // In a real app, this would call an API to update the user's profile
     setIsEditing(false);
+    
+    // Also update in the admin users list (localStorage)
+    const adminUsers = localStorage.getItem('adminUsers');
+    if (adminUsers) {
+      const parsedUsers = JSON.parse(adminUsers);
+      const updatedUsers = parsedUsers.map((user: any) => 
+        user.id === userData.id ? { ...user, name, email, phone } : user
+      );
+      localStorage.setItem('adminUsers', JSON.stringify(updatedUsers));
+    }
+    
+    // Save to profile user in localStorage
+    localStorage.setItem('profileUser', JSON.stringify(updatedUser));
+    
+    // Call the onUserUpdate callback if provided
+    if (onUserUpdate) {
+      onUserUpdate(updatedUser);
+    }
     
     toast({
       title: "Profile Updated",
@@ -65,11 +131,9 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
           </div>
           
           <div className="flex items-center space-x-2">
-            {userData.status && (
-              <Badge variant={userData.status === 'Active' ? 'default' : 'secondary'}>
-                {userData.status}
-              </Badge>
-            )}
+            <Badge variant={userStatus === 'Active' ? 'default' : 'secondary'}>
+              {userStatus}
+            </Badge>
             
             {isEditing ? (
               <>
@@ -83,7 +147,12 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
                 </Button>
               </>
             ) : (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsEditing(true)}
+                disabled={userStatus === 'Inactive'}
+              >
                 <Edit size={16} className="mr-2" />
                 Edit Profile
               </Button>
@@ -92,6 +161,18 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
         </CardHeader>
         
         <CardContent>
+          {userStatus === 'Inactive' && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Account Inactive</AlertTitle>
+              <AlertDescription>
+                Your account has been deactivated by an administrator. 
+                You cannot make changes to your profile or make bookings. 
+                Please contact customer support for assistance.
+              </AlertDescription>
+            </Alert>
+          )}
+        
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -150,14 +231,6 @@ const ProfileInfo = ({ userData }: ProfileInfoProps) => {
                 ))}
               </div>
             </div>
-            
-            {userData.status === 'Inactive' && (
-              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-100 rounded-md">
-                <p className="text-yellow-800 text-sm">
-                  Your account is currently inactive. Please contact customer support if you believe this is an error.
-                </p>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>

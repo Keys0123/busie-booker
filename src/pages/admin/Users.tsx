@@ -6,8 +6,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Sample user data - In a real app, this would come from an API or database
 const initialUsers = [
@@ -80,6 +91,29 @@ const AdminUsers = () => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedUser, setSelectedUser] = useState<typeof initialUsers[0] | null>(null);
   const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [editUserData, setEditUserData] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    status: string;
+  } | null>(null);
+  
+  // Simulate localStorage for user data (would be a database in real app)
+  useEffect(() => {
+    const savedUsers = localStorage.getItem('adminUsers');
+    if (savedUsers) {
+      setUsers(JSON.parse(savedUsers));
+    } else {
+      localStorage.setItem('adminUsers', JSON.stringify(initialUsers));
+    }
+  }, []);
+
+  // Save users to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('adminUsers', JSON.stringify(users));
+  }, [users]);
   
   // Filter users based on search term and status
   const filteredUsers = users.filter(user => {
@@ -102,10 +136,31 @@ const AdminUsers = () => {
   };
   
   const handleEditUser = (userId: string) => {
-    toast({
-      title: "Edit User",
-      description: `Editing user ID: ${userId}`,
-    });
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setEditUserData({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        status: user.status,
+      });
+      setIsEditUserOpen(true);
+    }
+  };
+
+  const handleSaveUserEdit = () => {
+    if (editUserData) {
+      setUsers(users.map(user => 
+        user.id === editUserData.id ? { ...user, ...editUserData } : user
+      ));
+      setIsEditUserOpen(false);
+      
+      toast({
+        title: "User Updated",
+        description: `User ${editUserData.name} has been updated successfully`,
+      });
+    }
   };
   
   const handleDeleteUser = (userId: string) => {
@@ -119,6 +174,12 @@ const AdminUsers = () => {
           onClick={() => {
             // Delete the user
             setUsers(users.filter(user => user.id !== userId));
+            
+            // Also remove from localStorage to sync with profile page
+            const profileUser = localStorage.getItem('profileUser');
+            if (profileUser && JSON.parse(profileUser).id === userId) {
+              localStorage.removeItem('profileUser');
+            }
             
             toast({
               title: "User Deleted",
@@ -144,6 +205,14 @@ const AdminUsers = () => {
     setUsers(users.map(user => {
       if (user.id === userId) {
         const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
+        
+        // Update localStorage if this is the logged-in user
+        const profileUser = localStorage.getItem('profileUser');
+        if (profileUser && JSON.parse(profileUser).id === userId) {
+          const updatedProfileUser = { ...JSON.parse(profileUser), status: newStatus };
+          localStorage.setItem('profileUser', JSON.stringify(updatedProfileUser));
+        }
+        
         return { ...user, status: newStatus };
       }
       return user;
@@ -166,6 +235,47 @@ const AdminUsers = () => {
     }
   };
 
+  const handleAddUser = () => {
+    // Generate a new user ID (simple implementation for demo)
+    const newId = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    setEditUserData({
+      id: newId,
+      name: '',
+      email: '',
+      phone: '',
+      status: 'Active',
+    });
+    
+    setIsEditUserOpen(true);
+  };
+
+  const handleCreateUser = () => {
+    if (editUserData && editUserData.name && editUserData.email) {
+      const newUser = {
+        ...editUserData,
+        id: editUserData.id,
+        bookings: 0,
+        joined: new Date().toISOString().split('T')[0],
+        lastLogin: new Date().toISOString().split('T')[0],
+      };
+      
+      setUsers([...users, newUser]);
+      setIsEditUserOpen(false);
+      
+      toast({
+        title: "User Created",
+        description: `New user ${newUser.name} has been created successfully`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -175,7 +285,7 @@ const AdminUsers = () => {
             Manage user accounts and permissions
           </p>
         </div>
-        <Button onClick={() => toast({ title: "Add User", description: "User form would appear here" })}>
+        <Button onClick={handleAddUser}>
           <Plus className="mr-2 h-4 w-4" /> Add User
         </Button>
       </div>
@@ -232,37 +342,37 @@ const AdminUsers = () => {
       {/* Users Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-4">
-                    <div className="flex items-center">
-                      User ID
-                      <ArrowUpDown size={14} className="ml-1" />
-                    </div>
-                  </th>
-                  <th className="text-left p-4">Name</th>
-                  <th className="text-left p-4">Email</th>
-                  <th className="text-left p-4">Phone</th>
-                  <th className="text-left p-4">Bookings</th>
-                  <th className="text-left p-4">Joined</th>
-                  <th className="text-left p-4">Last Login</th>
-                  <th className="text-left p-4">Status</th>
-                  <th className="text-left p-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4 font-medium">#{user.id}</td>
-                    <td className="p-4">{user.name}</td>
-                    <td className="p-4">{user.email}</td>
-                    <td className="p-4">{user.phone}</td>
-                    <td className="p-4">{user.bookings}</td>
-                    <td className="p-4">{user.joined}</td>
-                    <td className="p-4">{user.lastLogin}</td>
-                    <td className="p-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  <div className="flex items-center">
+                    User ID
+                    <ArrowUpDown size={14} className="ml-1" />
+                  </div>
+                </TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Bookings</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead>Last Login</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">#{user.id}</TableCell>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone}</TableCell>
+                    <TableCell>{user.bookings}</TableCell>
+                    <TableCell>{user.joined}</TableCell>
+                    <TableCell>{user.lastLogin}</TableCell>
+                    <TableCell>
                       <div className="flex items-center space-x-2">
                         <span 
                           className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(user.status)} cursor-pointer`}
@@ -272,8 +382,8 @@ const AdminUsers = () => {
                           {user.status}
                         </span>
                       </div>
-                    </td>
-                    <td className="p-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex space-x-2">
                         <Button 
                           variant="ghost" 
@@ -297,20 +407,18 @@ const AdminUsers = () => {
                           <Trash size={16} />
                         </Button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                
-                {filteredUsers.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="p-4 text-center text-gray-500">
-                      No users found matching your criteria
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center text-gray-500">
+                    No users found matching your criteria
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -381,6 +489,15 @@ const AdminUsers = () => {
                     Close
                   </Button>
                   <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setIsUserDetailsOpen(false);
+                      handleEditUser(selectedUser.id);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
                     variant="destructive"
                     onClick={() => {
                       handleDeleteUser(selectedUser.id);
@@ -393,6 +510,80 @@ const AdminUsers = () => {
               </div>
             )}
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditUserOpen} onOpenChange={(open) => {
+        setIsEditUserOpen(open);
+        if (!open) setEditUserData(null);
+      }}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editUserData && editUserData.name ? `Edit User: ${editUserData.name}` : 'Create New User'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input 
+                id="edit-name" 
+                value={editUserData?.name || ''} 
+                onChange={(e) => setEditUserData(prev => prev ? {...prev, name: e.target.value} : null)}
+                placeholder="Enter full name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email Address</Label>
+              <Input 
+                id="edit-email" 
+                type="email" 
+                value={editUserData?.email || ''} 
+                onChange={(e) => setEditUserData(prev => prev ? {...prev, email: e.target.value} : null)}
+                placeholder="Enter email address"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Phone Number</Label>
+              <Input 
+                id="edit-phone" 
+                value={editUserData?.phone || ''} 
+                onChange={(e) => setEditUserData(prev => prev ? {...prev, phone: e.target.value} : null)}
+                placeholder="Enter phone number"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-status">Status</Label>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="status-active" 
+                    checked={editUserData?.status === 'Active'}
+                    onCheckedChange={() => setEditUserData(prev => prev ? {...prev, status: 'Active'} : null)}
+                  />
+                  <label htmlFor="status-active">Active</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="status-inactive" 
+                    checked={editUserData?.status === 'Inactive'}
+                    onCheckedChange={() => setEditUserData(prev => prev ? {...prev, status: 'Inactive'} : null)}
+                  />
+                  <label htmlFor="status-inactive">Inactive</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>Cancel</Button>
+            <Button onClick={editUserData?.name ? handleSaveUserEdit : handleCreateUser}>
+              {editUserData?.name ? 'Save Changes' : 'Create User'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
