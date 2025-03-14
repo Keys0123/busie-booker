@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Bus, 
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 
 // User data - This should match with the Users.tsx file
 const usersData = [
