@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Index from './pages/Index';
@@ -21,6 +20,7 @@ import AdminRoutes from './pages/admin/Routes';
 import Bookings from './pages/admin/Bookings';
 import Users from './pages/admin/Users';
 import Profile from './pages/Profile';
+import Report from './pages/admin/Report';
 
 function App() {
   return (
@@ -48,6 +48,7 @@ function App() {
           <Route path="routes" element={<AdminRoutes />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="users" element={<Users />} />
+          <Route path="report" element={<Report />} />
         </Route>
         
         <Route path="*" element={<NotFound />} />
