@@ -29,7 +29,7 @@ const simulatedBuses = [
 const BusTrackingMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const markersRef = useRef<{ [key: number]: mapboxgl.Marker }>({});
   const [mapboxToken, setMapboxToken] = useState<string>(MAPBOX_TOKEN);
   const [showTokenInput, setShowTokenInput] = useState(true);
 
@@ -53,8 +53,9 @@ const BusTrackingMap = () => {
       el.className = 'bus-marker';
       el.innerHTML = '<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 3H8C5.23858 3 3 5.23858 3 8V16C3 18.7614 5.23858 21 8 21H16C18.7614 21 21 18.7614 21 16V8C21 5.23858 18.7614 3 16 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
 
+      // Fix: Use proper LngLatLike format
       const marker = new mapboxgl.Marker(el)
-        .setLngLat(bus.coordinates)
+        .setLngLat({ lng: bus.coordinates[0], lat: bus.coordinates[1] })
         .setPopup(new mapboxgl.Popup().setHTML(`<h3 class="font-bold">${bus.routeName}</h3>`))
         .addTo(map.current);
 
