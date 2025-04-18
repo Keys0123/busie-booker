@@ -21,6 +21,7 @@ import Bookings from './pages/admin/Bookings';
 import Users from './pages/admin/Users';
 import Profile from './pages/Profile';
 import Report from './pages/admin/Report';
+import LiveTracking from './pages/LiveTracking';
 
 function App() {
   return (
@@ -38,7 +39,8 @@ function App() {
         <Route path="/seat-selection/:busId" element={<SeatSelection />} />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="/profile" element={<Profile />} />
-
+        <Route path="/live-tracking" element={<LiveTracking />} />
+        
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminLayout />}>
