@@ -1,20 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Ticket, Clock, Edit, MapPin, LogOut } from 'lucide-react';
+import { User, Ticket, Clock, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import ProfileInfo from '@/components/profile/ProfileInfo';
 import TravelHistory from '@/components/profile/TravelHistory';
 import SavedTickets from '@/components/profile/SavedTickets';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 // Default user data as fallback
 const defaultUserData = {
@@ -31,11 +30,8 @@ const defaultUserData = {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("info");
   const [userData, setUserData] = useState(defaultUserData);
-  
-  // Check if user is logged in
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   useEffect(() => {
@@ -59,20 +55,23 @@ const Profile = () => {
     if (savedUserProfile) {
       // Parse and use the saved profile data
       const profileData = JSON.parse(savedUserProfile);
+      console.log("Loading profile data:", profileData);
       setUserData(profileData);
       setIsLoggedIn(true);
     } else {
       // If we have an email but no profile, try to find the user in accounts
       const accounts = JSON.parse(localStorage.getItem('userAccounts') || '[]');
-      const currentUser = accounts.find((user: any) => user.email === currentUserEmail);
+      const currentUser = accounts.find((user: any) => user.email.toLowerCase() === currentUserEmail.toLowerCase());
       
       if (currentUser) {
         // Found the user, set their profile data
+        console.log("Found user in accounts:", currentUser);
         setUserData(currentUser.profile);
         localStorage.setItem('profileUser', JSON.stringify(currentUser.profile));
         setIsLoggedIn(true);
       } else {
         // No user found, redirect to login
+        console.log("No user found for email:", currentUserEmail);
         toast({
           title: "Session Expired",
           description: "Please log in again",
@@ -82,31 +81,7 @@ const Profile = () => {
         navigate('/login');
       }
     }
-    
-    // Check if user exists in admin users list and update if needed
-    const adminUsers = localStorage.getItem('adminUsers');
-    if (adminUsers && currentUserEmail) {
-      const parsedUsers = JSON.parse(adminUsers);
-      const userExists = parsedUsers.some((user: any) => user.email === currentUserEmail);
-      
-      if (!userExists && savedUserProfile) {
-        // Add this user to admin users list if not present
-        const userProfile = JSON.parse(savedUserProfile);
-        parsedUsers.push({
-          id: userProfile.id,
-          name: userProfile.name,
-          email: userProfile.email,
-          phone: userProfile.phone,
-          bookings: userProfile.totalTrips,
-          joined: userProfile.memberSince,
-          status: userProfile.status || 'Active',
-          lastLogin: new Date().toISOString().split('T')[0]
-        });
-        
-        localStorage.setItem('adminUsers', JSON.stringify(parsedUsers));
-      }
-    }
-  }, [navigate, toast]);
+  }, [navigate]);
   
   const handleLogout = () => {
     // Handle logout

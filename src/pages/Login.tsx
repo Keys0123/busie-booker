@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -81,6 +80,10 @@ const Login = () => {
     // Initialize user accounts from localStorage
     const accounts = initializeUserAccounts();
     setUserAccounts(accounts);
+    
+    // Clear any existing login data
+    localStorage.removeItem('currentUserEmail');
+    localStorage.removeItem('profileUser');
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -111,22 +114,24 @@ const Login = () => {
       if (user && user.password === password) {
         // Clear any existing profile data
         localStorage.removeItem('profileUser');
+        localStorage.removeItem('currentUserEmail');
         
         // Store the user's profile info
         localStorage.setItem('profileUser', JSON.stringify(user.profile));
-        localStorage.setItem('currentUserEmail', email);
+        localStorage.setItem('currentUserEmail', user.email);
         
         // Update admin users list if needed
         const adminUsers = localStorage.getItem('adminUsers');
+        let parsedUsers = [];
+        
         if (adminUsers) {
-          const parsedUsers = JSON.parse(adminUsers);
+          parsedUsers = JSON.parse(adminUsers);
           // Check if user exists in admin list
           const existingUserIndex = parsedUsers.findIndex((u: any) => u.email === user.profile.email);
           
           if (existingUserIndex >= 0) {
             // Update lastLogin
             parsedUsers[existingUserIndex].lastLogin = new Date().toISOString().split('T')[0];
-            localStorage.setItem('adminUsers', JSON.stringify(parsedUsers));
           } else {
             // Add user to admin list
             parsedUsers.push({
@@ -139,11 +144,10 @@ const Login = () => {
               status: user.profile.status || 'Active',
               lastLogin: new Date().toISOString().split('T')[0]
             });
-            localStorage.setItem('adminUsers', JSON.stringify(parsedUsers));
           }
         } else {
           // Create admin users list if it doesn't exist
-          const newAdminUsers = [{
+          parsedUsers = [{
             id: user.profile.id,
             name: user.profile.name,
             email: user.profile.email,
@@ -153,8 +157,9 @@ const Login = () => {
             status: user.profile.status || 'Active',
             lastLogin: new Date().toISOString().split('T')[0]
           }];
-          localStorage.setItem('adminUsers', JSON.stringify(newAdminUsers));
         }
+        
+        localStorage.setItem('adminUsers', JSON.stringify(parsedUsers));
         
         toast({
           title: "Success",

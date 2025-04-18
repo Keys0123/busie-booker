@@ -42,6 +42,7 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
 
   // Update form fields when userData changes
   useEffect(() => {
+    console.log("ProfileInfo: Updating form fields with new userData", userData);
     setName(userData.name);
     setEmail(userData.email);
     setPhone(userData.phone);
@@ -58,7 +59,9 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
       const adminUsers = localStorage.getItem('adminUsers');
       if (adminUsers) {
         const parsedUsers = JSON.parse(adminUsers);
-        const currentUser = parsedUsers.find((user: any) => user.email === currentUserEmail);
+        const currentUser = parsedUsers.find((user: any) => 
+          user.email.toLowerCase() === currentUserEmail.toLowerCase()
+        );
         
         if (currentUser) {
           if (currentUser.status !== userStatus) {
@@ -70,14 +73,6 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
               });
             }
           }
-        } else {
-          // User was deleted by admin
-          toast({
-            title: "Account Deleted",
-            description: "Your account has been deleted by an administrator.",
-            variant: "destructive",
-          });
-          // In a real app, you would redirect to logout here
         }
       }
     };
@@ -110,14 +105,15 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
     
     // Save to profile user in localStorage
     localStorage.setItem('profileUser', JSON.stringify(updatedUser));
+    localStorage.setItem('currentUserEmail', email);
     
     // Also update in userAccounts
     const accounts = JSON.parse(localStorage.getItem('userAccounts') || '[]');
     const updatedAccounts = accounts.map((account: any) => {
       if (account.email === userData.email) {
-        const updatedAccount = {
+        return {
           ...account,
-          email: email, // Update email in the top-level object too
+          email: email,
           profile: {
             ...account.profile,
             name,
@@ -125,7 +121,6 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
             phone
           }
         };
-        return updatedAccount;
       }
       return account;
     });
@@ -258,9 +253,13 @@ const ProfileInfo = ({ userData, onUserUpdate }: ProfileInfoProps) => {
             <div className="space-y-2">
               <Label>Preferred Routes</Label>
               <div className="flex flex-wrap gap-2">
-                {userData.preferredRoutes.map((route) => (
-                  <Badge key={route} variant="outline">{route}</Badge>
-                ))}
+                {userData.preferredRoutes && userData.preferredRoutes.length > 0 ? (
+                  userData.preferredRoutes.map((route) => (
+                    <Badge key={route} variant="outline">{route}</Badge>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No preferred routes set</p>
+                )}
               </div>
             </div>
           </div>

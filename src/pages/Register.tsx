@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -71,34 +70,51 @@ const Register = () => {
       // Create a unique ID for the user
       const userId = `usr${Date.now().toString().slice(-6)}`;
       
+      // Create new user profile
+      const userProfile = {
+        id: userId,
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        profileImage: "",
+        memberSince: new Date().toISOString().split('T')[0],
+        totalTrips: 0,
+        preferredRoutes: [],
+        status: "Active" as 'Active' | 'Inactive'
+      };
+      
       // Create a new user account
       const newUser = {
         email: formData.email,
         password: formData.password,
-        profile: {
-          id: userId,
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          profileImage: "",
-          memberSince: new Date().toISOString().split('T')[0],
-          totalTrips: 0,
-          preferredRoutes: [],
-          status: "Active"
-        }
+        profile: userProfile
       };
       
       // Get existing user accounts or initialize empty array
       const existingUsers = JSON.parse(localStorage.getItem('userAccounts') || '[]');
       
       // Check if email already exists
-      if (existingUsers.some((user: any) => user.email === formData.email)) {
+      if (existingUsers.some((user: any) => user.email.toLowerCase() === formData.email.toLowerCase())) {
         throw new Error('Email already exists');
       }
       
       // Add new user to accounts
       existingUsers.push(newUser);
       localStorage.setItem('userAccounts', JSON.stringify(existingUsers));
+      
+      // Also add to admin users list for management
+      const adminUsers = JSON.parse(localStorage.getItem('adminUsers') || '[]');
+      adminUsers.push({
+        id: userId,
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        bookings: 0,
+        joined: new Date().toISOString().split('T')[0],
+        status: "Active",
+        lastLogin: new Date().toISOString().split('T')[0]
+      });
+      localStorage.setItem('adminUsers', JSON.stringify(adminUsers));
       
       toast({
         title: "Registration successful",
