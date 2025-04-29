@@ -157,7 +157,7 @@ const NavItem = ({ to, icon, label, isActive, isExpanded }: NavItemProps) => {
         "flex items-center px-3 py-2 rounded-md transition-colors",
         isActive
           ? "bg-primary/10 text-primary font-medium"
-          : "text-gray-700 hover:bg-gray-100",
+          : "text-foreground hover:bg-muted",
         !isExpanded && "justify-center"
       )}
     >
