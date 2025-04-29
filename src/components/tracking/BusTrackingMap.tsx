@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Bus, Map } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 // This would normally come from an environment variable
 const MAPBOX_TOKEN = 'YOUR_MAPBOX_PUBLIC_TOKEN';
@@ -32,35 +33,50 @@ const BusTrackingMap = () => {
   const markersRef = useRef<{ [key: number]: mapboxgl.Marker }>({});
   const [mapboxToken, setMapboxToken] = useState<string>(MAPBOX_TOKEN);
   const [showTokenInput, setShowTokenInput] = useState(true);
+  const { toast } = useToast();
 
   const initializeMap = () => {
     if (!mapContainer.current) return;
 
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [84.1240, 27.7172], // Center of Nepal
-      zoom: 7
-    });
+    try {
+      mapboxgl.accessToken = mapboxToken;
+      
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [84.1240, 27.7172], // Center of Nepal
+        zoom: 7
+      });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Add markers for each bus
-    simulatedBuses.forEach((bus) => {
-      const el = document.createElement('div');
-      el.className = 'bus-marker';
-      el.innerHTML = '<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 3H8C5.23858 3 3 5.23858 3 8V16C3 18.7614 5.23858 21 8 21H16C18.7614 21 21 18.7614 21 16V8C21 5.23858 18.7614 3 16 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+      // Add markers for each bus
+      simulatedBuses.forEach((bus) => {
+        const el = document.createElement('div');
+        el.className = 'bus-marker';
+        el.innerHTML = '<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 3H8C5.23858 3 3 5.23858 3 8V16C3 18.7614 5.23858 21 8 21H16C18.7614 21 21 18.7614 21 16V8C21 5.23858 18.7614 3 16 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
 
-      // Fix: Use proper LngLatLike format
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat({ lng: bus.coordinates[0], lat: bus.coordinates[1] })
-        .setPopup(new mapboxgl.Popup().setHTML(`<h3 class="font-bold">${bus.routeName}</h3>`))
-        .addTo(map.current);
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat({ lng: bus.coordinates[0], lat: bus.coordinates[1] })
+          .setPopup(new mapboxgl.Popup().setHTML(`<h3 class="font-bold">${bus.routeName}</h3>`))
+          .addTo(map.current);
 
-      markersRef.current[bus.id] = marker;
-    });
+        markersRef.current[bus.id] = marker;
+      });
+
+      toast({
+        title: "Map initialized",
+        description: "Bus tracking is now active",
+      });
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      toast({
+        title: "Map initialization failed",
+        description: "Please check your Mapbox token and try again",
+        variant: "destructive",
+      });
+      setShowTokenInput(true);
+    }
   };
 
   // Simulate bus movement
@@ -73,10 +89,11 @@ const BusTrackingMap = () => {
       const dx = (bus.destination[0] - currentPos.lng) * 0.01;
       const dy = (bus.destination[1] - currentPos.lat) * 0.01;
 
-      marker.setLngLat([
-        currentPos.lng + dx,
-        currentPos.lat + dy
-      ]);
+      // Update marker position
+      marker.setLngLat({
+        lng: currentPos.lng + dx,
+        lat: currentPos.lat + dy
+      });
     });
   };
 
@@ -90,7 +107,9 @@ const BusTrackingMap = () => {
 
     return () => {
       clearInterval(interval);
-      map.current?.remove();
+      if (map.current) {
+        map.current.remove();
+      }
     };
   }, [mapboxToken, showTokenInput]);
 
