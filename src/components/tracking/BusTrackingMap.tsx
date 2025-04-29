@@ -45,7 +45,7 @@ const BusTrackingMap = () => {
       
       // Use different map styles based on theme
       const mapStyle = theme === 'dark' 
-        ? 'mapbox://styles/mapbox/dark-v11'
+        ? 'mapbox://styles/mapbox/navigation-night-v1'
         : 'mapbox://styles/mapbox/streets-v11';
       
       map.current = new mapboxgl.Map({
@@ -61,7 +61,11 @@ const BusTrackingMap = () => {
       simulatedBuses.forEach((bus) => {
         const el = document.createElement('div');
         el.className = 'bus-marker';
-        el.innerHTML = '<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 3H8C5.23858 3 3 5.23858 3 8V16C3 18.7614 5.23858 21 8 21H16C18.7614 21 21 18.7614 21 16V8C21 5.23858 18.7614 3 16 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+        
+        // Use different marker colors based on theme
+        const markerColor = theme === 'dark' ? '#61dafb' : '#3b82f6';
+        
+        el.innerHTML = `<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white" style="background-color: ${markerColor}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 3H8C5.23858 3 3 5.23858 3 8V16C3 18.7614 5.23858 21 8 21H16C18.7614 21 21 18.7614 21 16V8C21 5.23858 18.7614 3 16 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
 
         const marker = new mapboxgl.Marker(el)
           .setLngLat({ lng: bus.coordinates[0], lat: bus.coordinates[1] })
@@ -129,7 +133,7 @@ const BusTrackingMap = () => {
 
   if (showTokenInput) {
     return (
-      <Card className="p-6">
+      <Card className="p-6 shadow-md">
         <h2 className="text-2xl font-bold mb-4">Map Configuration</h2>
         <p className="mb-4 text-muted-foreground">
           Please enter your Mapbox public token to initialize the tracking system.
@@ -160,7 +164,7 @@ const BusTrackingMap = () => {
           <span className="font-medium">{simulatedBuses.length} Active Buses</span>
         </div>
       </div>
-      <Card>
+      <Card className="shadow-md overflow-hidden">
         <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
       </Card>
     </div>
