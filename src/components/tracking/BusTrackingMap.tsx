@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Bus, Map } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 // This would normally come from an environment variable
 const MAPBOX_TOKEN = 'YOUR_MAPBOX_PUBLIC_TOKEN';
@@ -34,6 +35,7 @@ const BusTrackingMap = () => {
   const [mapboxToken, setMapboxToken] = useState<string>(MAPBOX_TOKEN);
   const [showTokenInput, setShowTokenInput] = useState(true);
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   const initializeMap = () => {
     if (!mapContainer.current) return;
@@ -41,9 +43,14 @@ const BusTrackingMap = () => {
     try {
       mapboxgl.accessToken = mapboxToken;
       
+      // Use different map styles based on theme
+      const mapStyle = theme === 'dark' 
+        ? 'mapbox://styles/mapbox/dark-v11'
+        : 'mapbox://styles/mapbox/streets-v11';
+      
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v11',
+        style: mapStyle,
         center: [84.1240, 27.7172], // Center of Nepal
         zoom: 7
       });
@@ -97,9 +104,16 @@ const BusTrackingMap = () => {
     });
   };
 
+  // Effect for theme change - reinitialize map when theme changes
   useEffect(() => {
     if (!mapboxToken || showTokenInput) return;
     
+    // If map exists, remove it first
+    if (map.current) {
+      map.current.remove();
+    }
+    
+    // Initialize the map with the new theme
     initializeMap();
 
     // Simulate movement every 2 seconds
@@ -111,13 +125,13 @@ const BusTrackingMap = () => {
         map.current.remove();
       }
     };
-  }, [mapboxToken, showTokenInput]);
+  }, [mapboxToken, showTokenInput, theme]);
 
   if (showTokenInput) {
     return (
       <Card className="p-6">
         <h2 className="text-2xl font-bold mb-4">Map Configuration</h2>
-        <p className="mb-4 text-gray-600">
+        <p className="mb-4 text-muted-foreground">
           Please enter your Mapbox public token to initialize the tracking system.
           You can get one from mapbox.com
         </p>

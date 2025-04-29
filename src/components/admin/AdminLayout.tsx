@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -31,18 +32,18 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside 
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen transition-all duration-300 ease-in-out bg-white shadow-md",
+          "fixed left-0 top-0 z-40 h-screen transition-all duration-300 ease-in-out bg-card shadow-md border-r border-border",
           isSidebarOpen ? "w-64" : "w-20"
         )}
       >
         <div className="h-full flex flex-col justify-between">
           <div>
             {/* Sidebar header with logo */}
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center justify-between p-4 border-b border-border">
               {isSidebarOpen && (
                 <Link to="/admin" className="text-xl font-bold text-primary">
                   NepalBus Admin
@@ -99,12 +100,12 @@ const AdminLayout = () => {
           </div>
           
           {/* Footer with logout */}
-          <div className="p-3 border-t">
+          <div className="p-3 border-t border-border">
             <button
               onClick={handleLogout}
               className={cn(
                 "flex items-center w-full px-3 py-2 rounded-md transition-colors",
-                "hover:bg-gray-100 text-gray-700"
+                "hover:bg-muted text-foreground"
               )}
             >
               <LogOut size={20} />
@@ -119,12 +120,13 @@ const AdminLayout = () => {
         "flex-1 transition-all duration-300 ease-in-out",
         isSidebarOpen ? "ml-64" : "ml-20"
       )}>
-        <header className="bg-white shadow-sm">
+        <header className="bg-card shadow-sm border-b border-border">
           <div className="flex justify-between items-center px-6 py-4">
-            <h1 className="text-xl font-semibold text-gray-800">
+            <h1 className="text-xl font-semibold text-foreground">
               Admin Panel
             </h1>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => navigate('/')}>
                 View Website
               </Button>
