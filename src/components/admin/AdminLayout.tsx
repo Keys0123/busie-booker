@@ -15,7 +15,6 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -126,7 +125,6 @@ const AdminLayout = () => {
               Admin Panel
             </h1>
             <div className="flex items-center gap-4">
-              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => navigate('/')}>
                 View Website
               </Button>

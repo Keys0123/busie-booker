@@ -1,7 +1,7 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -102,7 +102,7 @@ export default {
           "50%": { transform: "translateY(-20px)" }
         },
         
-        // Improved bus animations with smoother transitions
+        // Bus animations
         "bus-left-to-right": {
           "0%": { transform: "translateX(-100px)" },
           "100%": { transform: "translateX(calc(100vw + 100px))" }
@@ -122,7 +122,7 @@ export default {
         "slide-in-right": "slide-in-right 0.5s ease-out",
         "slide-in-left": "slide-in-left 0.5s ease-out",
         
-        // Updated animations with faster speeds
+        // Updated animations
         "float": "float 8s ease-in-out infinite",
         "bus-left-to-right": "bus-left-to-right 15s linear infinite",
         "bus-right-to-left": "bus-right-to-left 18s linear infinite",

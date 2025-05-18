@@ -9,7 +9,7 @@ import { Toaster } from './components/ui/toaster.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="system" storageKey="nepal-bus-theme">
+    <ThemeProvider>
       <BrowserRouter>
         <App />
         <Toaster />
