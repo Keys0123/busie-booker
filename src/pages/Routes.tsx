@@ -1,9 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import RouteCard from '@/components/ui/RouteCard';
+import RouteOptimizer from '@/components/route/RouteOptimizer';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RouteService } from '@/services/RouteService';
 
 const RoutesPage = () => {
@@ -44,31 +47,46 @@ const RoutesPage = () => {
           </div>
         </section>
         
-        {/* Routes Grid */}
+        {/* Tabs for Routes and Route Optimizer */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {popularRoutes.length > 0 ? (
-                popularRoutes.map((route, index) => (
-                  <RouteCard 
-                    key={index}
-                    from={route.from}
-                    to={route.to}
-                    price={route.price}
-                    imageUrl={route.imageUrl}
-                  />
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-12">
-                  <h3 className="text-xl font-medium text-gray-600">
-                    No active routes available at the moment
-                  </h3>
-                  <p className="mt-2 text-gray-500">
-                    Please check back later or contact support for more information.
-                  </p>
+            <Tabs defaultValue="routes">
+              <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+                <TabsTrigger value="routes">Popular Routes</TabsTrigger>
+                <TabsTrigger value="optimizer">Route Optimizer</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="routes" className="mt-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {popularRoutes.length > 0 ? (
+                    popularRoutes.map((route, index) => (
+                      <RouteCard 
+                        key={index}
+                        from={route.from}
+                        to={route.to}
+                        price={route.price}
+                        imageUrl={route.imageUrl}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-3 text-center py-12">
+                      <h3 className="text-xl font-medium text-gray-600">
+                        No active routes available at the moment
+                      </h3>
+                      <p className="mt-2 text-gray-500">
+                        Please check back later or contact support for more information.
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </TabsContent>
+              
+              <TabsContent value="optimizer" className="mt-8">
+                <div className="max-w-4xl mx-auto">
+                  <RouteOptimizer />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </section>
         
