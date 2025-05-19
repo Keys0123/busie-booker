@@ -79,8 +79,10 @@ export const RouteOptimizationService = {
 
       // Find the closest unvisited neighbor
       Object.entries(graph[currentNode]).forEach(([neighbor, distance]) => {
-        if (!visited.has(neighbor) && distance < shortestDistance) {
-          shortestDistance = distance;
+        // Ensure distance is treated as a number
+        const distanceValue = Number(distance);
+        if (!visited.has(neighbor) && distanceValue < shortestDistance) {
+          shortestDistance = distanceValue;
           nextNode = neighbor;
         }
       });
@@ -90,7 +92,8 @@ export const RouteOptimizationService = {
         // Check if we can directly reach the end from here
         if (graph[currentNode][end] !== undefined) {
           path.push(end);
-          totalDistance += graph[currentNode][end];
+          // Ensure we're adding a number to totalDistance
+          totalDistance += Number(graph[currentNode][end]);
           return {
             path,
             totalDistance,
@@ -103,7 +106,8 @@ export const RouteOptimizationService = {
 
       // Move to the next node
       path.push(nextNode);
-      totalDistance += graph[currentNode][nextNode];
+      // Ensure we're adding a number to totalDistance
+      totalDistance += Number(graph[currentNode][nextNode]);
       currentNode = nextNode;
     }
 
@@ -164,8 +168,8 @@ export const RouteOptimizationService = {
       Object.entries(graph[current]).forEach(([neighbor, distance]) => {
         // Only consider unvisited neighbors
         if (unvisited.has(neighbor)) {
-          // Calculate tentative distance
-          const tentativeDistance = distances[current] + distance;
+          // Calculate tentative distance, ensuring distance is treated as a number
+          const tentativeDistance = distances[current] + Number(distance);
           
           // If tentative distance is smaller than current distance
           if (tentativeDistance < distances[neighbor]) {
