@@ -1,4 +1,4 @@
-hejh
+hej
 ## Project info
 
 **URL**: https://lovable.dev/projects/d69fa0b8-7e4a-4d06-b59c-106b6f39fe8a
